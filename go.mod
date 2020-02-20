@@ -7,6 +7,7 @@ require (
 	github.com/emicklei/go-restful v2.11.1+incompatible
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/hpcloud/tail v1.0.0
+	github.com/jinzhu/gorm v1.9.12
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/sys v0.0.0-20200116001909-b77594299b42 // indirect
