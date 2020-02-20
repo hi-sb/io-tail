@@ -1,6 +1,6 @@
 package ext
 
-import "gitee.com/saltlamp/im-service/config"
+import "github.com/hi-sb/io-tail/config"
 
 var (
 	externalInterfaceRedisObj = new(RedisExternalInterface)

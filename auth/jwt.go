@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"gitee.com/saltlamp/im-service/config"
-	"gitee.com/saltlamp/im-service/syserr"
+	"github.com/hi-sb/io-tail/config"
+	"github.com/hi-sb/io-tail/syserr"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )

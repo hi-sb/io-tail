@@ -1,7 +1,7 @@
 package abstract
 
 import (
-	"gitee.com/saltlamp/im-service/body"
+	"github.com/hi-sb/io-tail/body"
 	"github.com/hpcloud/tail"
 )
 

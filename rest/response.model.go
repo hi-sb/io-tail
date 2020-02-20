@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"gitee.com/saltlamp/im-service/syserr"
+	"github.com/hi-sb/io-tail/syserr"
 	"github.com/emicklei/go-restful"
 )
 

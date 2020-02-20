@@ -2,9 +2,9 @@ package ext
 
 import (
 	"encoding/json"
-	"gitee.com/saltlamp/im-service/auth"
-	"gitee.com/saltlamp/im-service/cache"
-	"gitee.com/saltlamp/im-service/syserr"
+	"github.com/hi-sb/io-tail/auth"
+	"github.com/hi-sb/io-tail/cache"
+	"github.com/hi-sb/io-tail/syserr"
 	"strings"
 )
 

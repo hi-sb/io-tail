@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"gitee.com/saltlamp/im-service/syserr"
+	"github.com/hi-sb/io-tail/syserr"
 	"regexp"
 	"strconv"
 	"strings"

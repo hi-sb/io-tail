@@ -1,4 +1,4 @@
-module gitee.com/saltlamp/im-service
+module github.com/hi-sb/io-tail
 
 go 1.13
 

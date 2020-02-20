@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	_ "gitee.com/saltlamp/im-service/api"
-	"gitee.com/saltlamp/im-service/cache"
-	"gitee.com/saltlamp/im-service/topic"
+	_ "github.com/hi-sb/io-tail/api"
+	"github.com/hi-sb/io-tail/cache"
+	"github.com/hi-sb/io-tail/topic"
 )
 
 // log logo
@@ -32,6 +32,6 @@ func main() {
 	printASCIILogo()
 	topic.SetDataPath(*dataPath)
 	cache.RedisServiceClientInit(*redis, *redisPass)
-	cache.RedisClient.HSet("private_source","huangxing","{\"Name\":\"huangxing\",\"PublicKey\":\"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDdmE5ZTlUUHRQVHpPdTFMQ3NRaTllVkg3ZwpvaUF3V2xVQ210UlhBdHdxS2dtUjZZYnpaV1ZhMFliVC9WbDJKUFcrcFBKcnhwcHdZS0J5MDZPd0VCL0JVc1hOCkU2UDJnS2xYclJOaFE5Sk1PQjJ5eEM3UXdYV2ppTUVUdXUwNFVXeG9uN3RKL1l4cW5iblZGQlNXbmxhZ3M0eXkKWlNwWFg1ZnE2UlJ1UUFSYjFRSURBUUFCCi0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=\",\"Nickname\":\"大虾\",\"ProfilePhotoUrl\":\"http://www.17qq.com/img_qqtouxiang/88502343.jpeg\"}")
+	cache.RedisClient.HSet("private_source", "huangxing", "{\"Name\":\"huangxing\",\"PublicKey\":\"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDdmE5ZTlUUHRQVHpPdTFMQ3NRaTllVkg3ZwpvaUF3V2xVQ210UlhBdHdxS2dtUjZZYnpaV1ZhMFliVC9WbDJKUFcrcFBKcnhwcHdZS0J5MDZPd0VCL0JVc1hOCkU2UDJnS2xYclJOaFE5Sk1PQjJ5eEM3UXdYV2ppTUVUdXUwNFVXeG9uN3RKL1l4cW5iblZGQlNXbmxhZ3M0eXkKWlNwWFg1ZnE2UlJ1UUFSYjFRSURBUUFCCi0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=\",\"Nickname\":\"大虾\",\"ProfilePhotoUrl\":\"http://www.17qq.com/img_qqtouxiang/88502343.jpeg\"}")
 	httpService(buildAddr)
 }

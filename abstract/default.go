@@ -3,9 +3,9 @@ package abstract
 import (
 	"encoding/json"
 	"errors"
-	"gitee.com/saltlamp/im-service/body"
-	"gitee.com/saltlamp/im-service/config"
-	"gitee.com/saltlamp/im-service/utils"
+	"github.com/hi-sb/io-tail/body"
+	"github.com/hi-sb/io-tail/config"
+	"github.com/hi-sb/io-tail/utils"
 	"github.com/hpcloud/tail"
 )
 

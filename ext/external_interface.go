@@ -1,6 +1,6 @@
 package ext
 
-import "gitee.com/saltlamp/im-service/auth"
+import "github.com/hi-sb/io-tail/auth"
 
 // source
 type Source struct {

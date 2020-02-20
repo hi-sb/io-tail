@@ -2,9 +2,9 @@ package topic
 
 import (
 	"fmt"
-	"gitee.com/saltlamp/im-service/abstract"
-	"gitee.com/saltlamp/im-service/body"
-	"gitee.com/saltlamp/im-service/syserr"
+	"github.com/hi-sb/io-tail/abstract"
+	"github.com/hi-sb/io-tail/body"
+	"github.com/hi-sb/io-tail/syserr"
 	"github.com/hpcloud/tail"
 	"net/http"
 	"os"
