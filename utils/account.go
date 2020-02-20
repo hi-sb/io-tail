@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/hi-sb/io-tail/syserr"
+	"github.com/hi-sb/io-tail/core/syserr"
 	"regexp"
 	"strconv"
 	"strings"

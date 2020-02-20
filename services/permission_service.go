@@ -3,8 +3,8 @@ package service
 import (
 	"encoding/json"
 	"github.com/hi-sb/io-tail/auth"
-	"github.com/hi-sb/io-tail/cache"
-	"github.com/hi-sb/io-tail/syserr"
+	"github.com/hi-sb/io-tail/core/cache"
+	"github.com/hi-sb/io-tail/core/syserr"
 )
 
 //

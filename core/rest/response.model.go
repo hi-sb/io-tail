@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/hi-sb/io-tail/syserr"
+	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/emicklei/go-restful"
 )
 

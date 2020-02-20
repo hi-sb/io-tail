@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/hi-sb/io-tail/config"
-	"github.com/hi-sb/io-tail/syserr"
+	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )

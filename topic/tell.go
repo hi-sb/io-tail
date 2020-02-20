@@ -2,9 +2,9 @@ package topic
 
 import (
 	"fmt"
-	"github.com/hi-sb/io-tail/abstract"
+	"github.com/hi-sb/io-tail/core/abstract"
 	"github.com/hi-sb/io-tail/body"
-	"github.com/hi-sb/io-tail/syserr"
+	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hpcloud/tail"
 	"net/http"
 	"os"
