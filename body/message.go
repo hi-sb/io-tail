@@ -2,7 +2,6 @@ package body
 
 import (
 	"errors"
-	"time"
 )
 
 const (
@@ -18,8 +17,6 @@ const (
 	MessageTypeUrlVoice string = "voice/url"
 	// img message
 	MessageTypeUrlImg string = "img/url"
-	// sys uid
-	sysId string = "00000000000000000000000000000000"
 )
 
 // message
@@ -59,17 +56,6 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 		return 5, nil
 	default:
 		return -1, errors.New("unsupported content type")
-
-	}
-}
-
-func NewErrMessage(err error) *Message {
-	return &Message{
-		FormId:      sysId,
-		SendTime:    time.Now().UnixNano() / 1e6,
-		Body:        err.Error(),
-		Offset:      -1,
-		ContentType: MessageTypeText,
 	}
 }
 

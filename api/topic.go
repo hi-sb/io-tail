@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/base64"
 	"fmt"
+	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/abstract"
 	"github.com/hi-sb/io-tail/auth"
 	"github.com/hi-sb/io-tail/body"
@@ -11,19 +11,17 @@ import (
 	"github.com/hi-sb/io-tail/rest"
 	"github.com/hi-sb/io-tail/syserr"
 	"github.com/hi-sb/io-tail/topic"
-	"github.com/hi-sb/io-tail/utils"
-	"github.com/emicklei/go-restful"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
 var (
-	topicApi        = new(TopicApi)
-	filePathAdapter = abstract.NewDefaultFilePathAdapter()
-	readAndWrite    = abstract.NewDefaultReadAndWriteAdapter()
+	topicApi          = new(TopicApi)
+	filePathAdapter   = abstract.NewDefaultFilePathAdapter()
+	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
+	externalInterface = ext.GetExternalInterface()
 )
 
 // send request
@@ -54,8 +52,7 @@ func (topicApi *TopicApi) privateSourceListen(request *restful.Request, response
 		source := request.PathParameter("source")
 		// this service user
 		// and id == source
-		id := strings.Split(JWT.AtNum, "@")
-		if id[0] != source || JWT.Type != auth.TokenTypeUser {
+		if JWT.AtNum != source || JWT.Type != auth.TokenTypeUser {
 			return "", "", syserr.NewTokenAuthError("access denied")
 		}
 		offset := request.QueryParameter("offset")
@@ -67,7 +64,7 @@ func (topicApi *TopicApi) privateSourceListen(request *restful.Request, response
 			return "", "", syserr.NewBadRequestErr("offset bad request")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return id[0], source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
 	}()
 	topicApi.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -93,39 +90,9 @@ func (topicApi *TopicApi) publicSourceListen(request *restful.Request, response 
 			return "", "", syserr.NewBadRequestErr("offset bad request")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		id := strings.Split(JWT.AtNum, "@")
-		return id[0], source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
 	}()
 	topicApi.tellChan(openid, source, errChan, readChan, response, err)
-}
-
-//
-// open source listen
-func (topicApi *TopicApi) createPublicSource(request *restful.Request, response *restful.Response) {
-	ok, err := func() (bool, error) {
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		JWT, err := auth.GetJWT(token)
-		if err != nil {
-			return false, err
-		}
-		openSource := new(ext.OpenSource)
-		err = request.ReadEntity(openSource)
-		if err != nil {
-			return false, syserr.NewBadRequestErr(err.Error())
-		}
-		if JWT.Type != auth.TokenTypeUser {
-			return false, syserr.NewPermissionErr("not permission create public source")
-		}
-		if strings.Index(openSource.Name, "@") >= 0 {
-			return false, syserr.NewBadRequestErr("name Cannot contain @")
-		}
-		openSource.CreateName = JWT.AtNum
-		return externalInterface.CreateOpenSource(openSource)
-	}()
-	if !ok && err == nil {
-		err = syserr.NewSysErr("sys err")
-	}
-	rest.WriteEntity(ok, err, response)
 }
 
 // send
@@ -213,21 +180,7 @@ func (*TopicApi) send(request *restful.Request, response *restful.Response) {
 			return syserr.NewSourceNotFound("topic not found")
 		}
 		defer messageFile.Close()
-		publicKey, err := externalInterface.GetRsaPublicKey(source)
-		if err != nil {
-			return err
-		}
 		var fromId = JWT.AtNum
-		if publicKey != nil {
-			publicKeyBytes, err := base64.StdEncoding.DecodeString(*publicKey)
-			if err != nil {
-				return syserr.NewSysErr(err.Error())
-			}
-			fromId, err = utils.RsaEncryptAndBase64([]byte(JWT.AtNum), publicKeyBytes)
-			if err != nil {
-				return syserr.NewSysErr(err.Error())
-			}
-		}
 		message := body.Message{
 			FormId:      fromId,
 			SendTime:    sendRequest.SendTime,
@@ -246,18 +199,11 @@ func (*TopicApi) send(request *restful.Request, response *restful.Response) {
 	rest.WriteEntity(nil, err, response)
 }
 
-func (*TopicApi) getBaseData(request *restful.Request, response *restful.Response) {
-	name := request.PathParameter("name")
-	data, err := externalInterface.GetSourceBaseData(name)
-	rest.WriteEntity(data, err, response)
-}
-
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/topic")
 	webService.Route(webService.GET("offset/{source}").To(topicApi.offset))
 	webService.Route(webService.GET("/{source}").To(topicApi.privateSourceListen))
 	webService.Route(webService.PUT("/{source}").To(topicApi.send))
-	webService.Route(webService.GET("/base-data/{name}").To(topicApi.getBaseData))
 	webService.Route(webService.GET("open/{source}").To(topicApi.publicSourceListen))
 	binder.BindAdd()
 }
