@@ -6,8 +6,10 @@ import (
 	"github.com/emicklei/go-restful"
 	_ "github.com/hi-sb/io-tail/api"
 	"github.com/hi-sb/io-tail/cache"
+	"github.com/hi-sb/io-tail/db/mysql"
 	"github.com/hi-sb/io-tail/topic"
 	"net/http"
+	"os"
 )
 
 // log logo
@@ -33,15 +35,27 @@ func httpService(httpAddr *string) {
 	}
 }
 
+// mysql service
+func MysqlService(addr *string, showSql *bool) {
+	// add &parseTime=True
+	issucc := mysql.GetInstance().InitDataPool(*addr+"&parseTime=True", *showSql)
+	if !issucc {
+		os.Exit(1)
+	}
+}
+
 
 func main() {
 	buildAddr := flag.String("build", ":7654", "server http buildAddr")
 	dataPath := flag.String("dataPath", "./data", " message data path")
 	redis := flag.String("redis", "127.0.0.1:6379", "redis connect host and port ")
 	redisPass := flag.String("redisPass", "", "redis connect password")
+	showSql := flag.Bool("showSql", true, "show sql is :true or false")
+	mysqlAddr := flag.String("mysqlAddr", "", "mysql addr root:xxx@tcp(127.0.0.1:3306)/dbname?charset=utf8")
 	flag.Parse()
 	printASCIILogo()
 	topic.SetDataPath(*dataPath)
 	cache.RedisServiceClientInit(*redis, *redisPass)
+	MysqlService(mysqlAddr, showSql)
 	httpService(buildAddr)
 }
