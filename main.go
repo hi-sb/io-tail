@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/emicklei/go-restful"
 	_ "github.com/hi-sb/io-tail/api"
 	"github.com/hi-sb/io-tail/cache"
 	"github.com/hi-sb/io-tail/topic"
+	"net/http"
 )
 
 // log logo
@@ -21,6 +23,16 @@ func printASCIILogo() {
 	`
 	fmt.Println(logo)
 }
+
+
+// http service
+func httpService(httpAddr *string) {
+	fmt.Println("Start http server listen build addr is ", *httpAddr)
+	if err := http.ListenAndServe(*httpAddr, restful.DefaultContainer); err != nil {
+		panic(err)
+	}
+}
+
 
 func main() {
 	buildAddr := flag.String("build", ":7654", "server http buildAddr")
