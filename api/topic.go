@@ -7,8 +7,8 @@ import (
 	"github.com/hi-sb/io-tail/auth"
 	"github.com/hi-sb/io-tail/body"
 	"github.com/hi-sb/io-tail/cache"
-	"github.com/hi-sb/io-tail/ext"
 	"github.com/hi-sb/io-tail/rest"
+	service "github.com/hi-sb/io-tail/services"
 	"github.com/hi-sb/io-tail/syserr"
 	"github.com/hi-sb/io-tail/topic"
 	"net/http"
@@ -21,7 +21,7 @@ var (
 	topicApi          = new(TopicApi)
 	filePathAdapter   = abstract.NewDefaultFilePathAdapter()
 	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
-	externalInterface = ext.GetExternalInterface()
+	permissionService = service.PermissionService{}
 )
 
 // send request
@@ -156,7 +156,7 @@ func (*TopicApi) send(request *restful.Request, response *restful.Response) {
 			return err
 		}
 		source := request.PathParameter("source")
-		err = externalInterface.CheckWritePermission(JWT, source)
+		err = permissionService.CheckWritePermission(JWT, source)
 		if err != nil {
 			return err
 		}
