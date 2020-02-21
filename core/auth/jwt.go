@@ -13,6 +13,8 @@ const (
 
 type JWT struct {
 	AtNum    string
+	ID       string
+	UserName string
 	Type     string
 	Duration *time.Duration
 }
@@ -40,6 +42,8 @@ func CreateToken(JWT *JWT) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := make(jwt.MapClaims)
 	claims["atNum"] = JWT.AtNum
+	claims["username"] = JWT.UserName
+	claims["id"] = JWT.ID
 	claims["type"] = JWT.Type
 	claims["exp"] = time.Now().Add(*JWT.Duration).Unix()
 	claims["iat"] = time.Now().Unix()
@@ -59,6 +63,8 @@ func GetJWT(token string) (*JWT, error) {
 			return &JWT{
 				AtNum: claims["atNum"].(string),
 				Type:  claims["type"].(string),
+				ID:    claims["id"].(string),
+				UserName: claims["username"].(string),
 			}, nil
 		}
 	}
