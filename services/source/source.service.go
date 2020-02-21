@@ -1,4 +1,4 @@
-package api
+package source
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/hi-sb/io-tail/core/body"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/rest"
-	service "github.com/hi-sb/io-tail/services"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/core/topic"
 	"net/http"
@@ -17,30 +16,29 @@ import (
 	"time"
 )
 
-var (
-	topicApi          = new(TopicApi)
-	filePathAdapter   = abstract.NewDefaultFilePathAdapter()
-	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
-	permissionService = service.PermissionService{}
-)
+//
+type SourceService struct {
 
-// send request
-type SendRequest struct {
-	// send time
-	SendTime int64
-	// message body
-	Body string
-	// message type
-	ContentType string
 }
 
-// topic rest http service
-type TopicApi struct {
+var (
+	sourceService     = new(SourceService)
+	filePathAdapter   = abstract.NewDefaultFilePathAdapter()
+	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
+	permissionService = new(PermissionService)
+)
+
+
+// 创建一个群
+func (*SourceService) CreateOpenSource(openSource *OpenSource) (bool, error) {
+	//todo
+	return false,nil
 }
 
 //
-// user private listen
-func (topicApi *TopicApi) privateSourceListen(request *restful.Request, response *restful.Response) {
+// 监听私有资源
+// 也就是监听自己的消息话题，当有人发送消息到该资源，那么会发送一个消息到监听者
+func (sourceService *SourceService) privateSourceListen(request *restful.Request, response *restful.Response) {
 	errChan := make(chan error)
 	readChan := make(chan *body.Message)
 	openid, source, err := func() (string, string, error) {
@@ -66,12 +64,14 @@ func (topicApi *TopicApi) privateSourceListen(request *restful.Request, response
 		tell := topic.NewDefaultTell(offsetInt)
 		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
 	}()
-	topicApi.tellChan(openid, source, errChan, readChan, response, err)
+	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
 
 //
-// open source listen
-func (topicApi *TopicApi) publicSourceListen(request *restful.Request, response *restful.Response) {
+//监听一个共有的资源
+// 也就是群消息，群消息我们认为是一个公共的开放的资源
+// 只要加入了该群则可以发送消息到该资源，也就是往该资源写入消息，此时监听者将收到一个消息
+func (sourceService *SourceService) publicSourceListen(request *restful.Request, response *restful.Response) {
 	errChan := make(chan error)
 	readChan := make(chan *body.Message)
 	openid, source, err := func() (string, string, error) {
@@ -92,11 +92,11 @@ func (topicApi *TopicApi) publicSourceListen(request *restful.Request, response 
 		tell := topic.NewDefaultTell(offsetInt)
 		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
 	}()
-	topicApi.tellChan(openid, source, errChan, readChan, response, err)
+	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
 
-// send
-func (topicApi *TopicApi) tellChan(name string, source string, errChan chan error, readChan chan *body.Message, response *restful.Response, err error) {
+//通过tell监听资源文件
+func (sourceService *SourceService) tellChan(name string, source string, errChan chan error, readChan chan *body.Message, response *restful.Response, err error) {
 	if err != nil {
 		rest.WriteEntity(nil, err, response)
 		return
@@ -123,8 +123,10 @@ func (topicApi *TopicApi) tellChan(name string, source string, errChan chan erro
 	}
 }
 
-// get resource offset
-func (*TopicApi) offset(request *restful.Request, response *restful.Response) {
+// 获取一个资源对应一个有权访问的访问者的offset
+// 也就是话题文件的读取位置
+// 一个资源对应一个话题文件，每个人对于一个话题文件都有一个读取位置。
+func (sourceService *SourceService) offset(request *restful.Request, response *restful.Response) {
 	offset, err := func() (int64, error) {
 		token := request.HeaderParameter(auth.AUTH_HEADER)
 		JWT, err := auth.GetJWT(token)
@@ -142,8 +144,10 @@ func (*TopicApi) offset(request *restful.Request, response *restful.Response) {
 	rest.WriteEntity(offset, err, response)
 }
 
-// send
-func (*TopicApi) send(request *restful.Request, response *restful.Response) {
+// 发送消息到话题资源
+//也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
+//会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
+func (sourceService *SourceService) send(request *restful.Request, response *restful.Response) {
 	err := func() error {
 		sendRequest := new(SendRequest)
 		err := request.ReadEntity(sendRequest)
@@ -201,9 +205,9 @@ func (*TopicApi) send(request *restful.Request, response *restful.Response) {
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/topic")
-	webService.Route(webService.GET("offset/{source}").To(topicApi.offset))
-	webService.Route(webService.GET("/{source}").To(topicApi.privateSourceListen))
-	webService.Route(webService.PUT("/{source}").To(topicApi.send))
-	webService.Route(webService.GET("open/{source}").To(topicApi.publicSourceListen))
+	webService.Route(webService.GET("offset/{source}").To(sourceService.offset))
+	webService.Route(webService.GET("/{source}").To(sourceService.privateSourceListen))
+	webService.Route(webService.PUT("/{source}").To(sourceService.send))
+	webService.Route(webService.GET("open/{source}").To(sourceService.publicSourceListen))
 	binder.BindAdd()
 }

@@ -1,4 +1,4 @@
-package service
+package source
 
 import (
 	"encoding/json"
@@ -13,7 +13,10 @@ type PermissionService struct {
 }
 
 
-//Check whether a user has write access to a resource, that is, whether messages can be sent to an identity
+//检查写入权限
+//对于个人消息和群消息来说，其实就是一个是私有资源
+//而另一个是开放资源，写入一个私有资源，也就是给一个固定的人发送消息，那么需要验证发送者是否是被发送者的好友
+//而开放资源则是写入一个群消息到话题，那么这个时候就需要验证该发送者是否加入了该群
 func (*PermissionService) CheckWritePermission(jwt *auth.JWT, name string) error {
 	//todo
 	// open source and private source
