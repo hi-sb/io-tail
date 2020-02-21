@@ -39,7 +39,7 @@ func (message *Message) GetContentTypeNum() (int, error) {
 
 func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 	if contentType == "" {
-		return -1, errors.New("content type is null")
+		return -1, errors.New("ContentType 不能为空")
 	}
 	switch contentType {
 	case MessageTypeText:
@@ -55,7 +55,7 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 	case MessageTypeUrlImg:
 		return 5, nil
 	default:
-		return -1, errors.New("unsupported content type")
+		return -1, errors.New("非法的 ContentType")
 	}
 }
 

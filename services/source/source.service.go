@@ -50,8 +50,8 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 		source := request.PathParameter("source")
 		// this service user
 		// and id == source
-		if JWT.AtNum != source || JWT.Type != auth.TokenTypeUser {
-			return "", "", syserr.NewTokenAuthError("access denied")
+		if JWT.AtNum != source {
+			return "", "", syserr.NewTokenAuthError("拒绝访问")
 		}
 		offset := request.QueryParameter("offset")
 		var offsetInt int64
@@ -59,7 +59,7 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 			offsetInt, err = strconv.ParseInt(offset, 10, 64)
 		}
 		if err != nil {
-			return "", "", syserr.NewBadRequestErr("offset bad request")
+			return "", "", syserr.NewBadRequestErr("错误的参数 offset")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
 		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
@@ -87,7 +87,7 @@ func (sourceService *SourceService) publicSourceListen(request *restful.Request,
 			offsetInt, err = strconv.ParseInt(offset, 10, 64)
 		}
 		if err != nil {
-			return "", "", syserr.NewBadRequestErr("offset bad request")
+			return "", "", syserr.NewBadRequestErr("错误的offset参数")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
 		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
@@ -181,7 +181,7 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 		messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
 		if err != nil {
 			fmt.Println(err)
-			return syserr.NewSourceNotFound("topic not found")
+			return syserr.NewSourceNotFound("没有这样的群或用户")
 		}
 		defer messageFile.Close()
 		var fromId = JWT.AtNum
