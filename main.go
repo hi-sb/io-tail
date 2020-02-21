@@ -4,10 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/emicklei/go-restful"
-	_ "github.com/hi-sb/io-tail/api"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/topic"
+	_ "github.com/hi-sb/io-tail/services/sms"
+	_ "github.com/hi-sb/io-tail/services/user"
 	"net/http"
 	"os"
 )
@@ -45,6 +47,11 @@ func MysqlService(addr *string, showSql *bool) {
 }
 
 
+// redis lock service
+func RedisLockService(url *string, pw *string) {
+	lock.InitRedisLock(*url, *pw)
+}
+
 func main() {
 	buildAddr := flag.String("build", ":7654", "server http buildAddr")
 	dataPath := flag.String("dataPath", "./data", " message data path")
@@ -56,6 +63,7 @@ func main() {
 	printASCIILogo()
 	topic.SetDataPath(*dataPath)
 	cache.RedisServiceClientInit(*redis, *redisPass)
+	RedisLockService(redis, redisPass)
 	MysqlService(mysqlAddr, showSql)
 	httpService(buildAddr)
 }

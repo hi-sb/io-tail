@@ -11,3 +11,4 @@ func Md5V2(str string) string {
 	md5str := fmt.Sprintf("%x", has)
 	return md5str
 }
+

@@ -1,4 +1,4 @@
-package model
+package user
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 )
 
 //验证码
-type Verify struct {
+type VerifyModel struct {
 	// base 64 data
 	Data string
 	// id

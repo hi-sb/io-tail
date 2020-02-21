@@ -1,4 +1,4 @@
-package model
+package sms
 
 import "github.com/hi-sb/io-tail/core/db"
 
