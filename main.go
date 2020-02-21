@@ -7,7 +7,7 @@ import (
 	_ "github.com/hi-sb/io-tail/api"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
-	"github.com/hi-sb/io-tail/topic"
+	"github.com/hi-sb/io-tail/core/topic"
 	"net/http"
 	"os"
 )

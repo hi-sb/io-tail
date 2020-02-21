@@ -1,7 +1,7 @@
 package abstract
 
 import (
-	"github.com/hi-sb/io-tail/body"
+	"github.com/hi-sb/io-tail/core/body"
 	"github.com/hpcloud/tail"
 )
 
