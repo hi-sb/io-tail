@@ -16,7 +16,7 @@ type JWT struct {
 	ID       string
 	UserName string
 	Type     string
-	Duration *time.Duration
+	Duration time.Duration
 }
 
 type TokenType string
@@ -32,7 +32,7 @@ const (
 
 // create token
 func CreateToken(JWT *JWT) (string, error) {
-	if JWT.Duration == nil {
+	if JWT.Duration == 0 {
 		return "", syserr.NewTokenAuthError("Duration is null")
 	}
 	if JWT.Type == "" {
@@ -45,7 +45,7 @@ func CreateToken(JWT *JWT) (string, error) {
 	claims["username"] = JWT.UserName
 	claims["id"] = JWT.ID
 	claims["type"] = JWT.Type
-	claims["exp"] = time.Now().Add(*JWT.Duration).Unix()
+	claims["exp"] = time.Now().Add(JWT.Duration).Unix()
 	claims["iat"] = time.Now().Unix()
 	token.Claims = claims
 	if tokenString, err := token.SignedString([]byte(config.SignKey)); err == nil {
