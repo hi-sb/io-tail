@@ -9,6 +9,7 @@ import (
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type UserService struct {
@@ -81,8 +82,7 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 		jwt := auth.JWT{
 			UserName: userModel.MobileNumber,
 			ID:       userModel.ID,
-			//TODO
-			//Duration:  time.Duration(10080),
+			Duration:  time.Minute*10080,
 		}
 		token, err = auth.CreateToken(&jwt)
 	}
