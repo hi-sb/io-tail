@@ -2,10 +2,8 @@ package sms
 
 import (
 	"errors"
-	"fmt"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/utils"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -19,7 +17,7 @@ var (
 )
 
 const (
-	sendUrlModel = "http://mb345.com:999/WS/BatchSend2.aspx?CorpID=LKSDK0005555&Pwd=yrwl@188&Mobile=%s&Content=%s&Cell=&SendTime="
+//	sendUrlModel = "http://123123123.com:999&Mobile=%s&Content=%s&Cell=&SendTime="
 )
 
 var SmsServiceObj = new(SmsService)
@@ -31,21 +29,21 @@ func (this *SmsService) Send(mobile string, content string, ip string) error {
 	}
 	body := utils.Utf8ToGBK(content)
 	body = url.QueryEscape(body)
-	requestUrl := fmt.Sprintf(sendUrlModel, mobile, body)
-	response, err := httpClient.Get(requestUrl)
-	if err != nil {
-		return err
-	}
-	byte, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return err
-	}
-	responseBody := string(byte)
+	//requestUrl := fmt.Sprintf(sendUrlModel, mobile, body)
+	//response, err := httpClient.Get(requestUrl)
+	//if err != nil {
+	//	return err
+	//}
+	//byte, err := ioutil.ReadAll(response.Body)
+	//if err != nil {
+	//	return err
+	//}
+	//responseBody := string(byte)
 	smsLog := SmsLogModel{
 		IP:           ip,
 		MobileNumber: mobile,
 		Content:      content,
-		ResponseBody: responseBody,
+	//	ResponseBody: responseBody,
 	}
 	smsLog.Bind()
 	return mysql.DB.Create(&smsLog).Error
