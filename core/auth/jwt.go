@@ -82,3 +82,21 @@ func ParseToken(s string) (*jwt.Token, error) {
 	}
 	return token, err
 }
+
+
+
+// 根据token获取uid
+func GetUID(token string) (string, error) {
+	tokenInfo, err := ParseToken(token)
+	if err == nil {
+		if claims, ok := tokenInfo.Claims.(jwt.MapClaims); ok && tokenInfo.Valid {
+			return claims["id"].(string), nil
+		}
+	}
+	return "", syserr.NewTokenAuthError(err.Error())
+}
+
+
+func GetTokenHeader() string{
+	return AUTH_HEADER
+}

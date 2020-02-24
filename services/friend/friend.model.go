@@ -1,6 +1,23 @@
 package friend
 
-import "github.com/hi-sb/io-tail/core/db"
+import (
+	"github.com/hi-sb/io-tail/core/db"
+	"github.com/hi-sb/io-tail/core/syserr"
+)
+
+
+const (
+	IS_NOT_BLACK string = "11"  // 正常
+	IS_BLACK_A_PULL_B string = "10"  // A 拉黑 B
+	IS_BLACK_B_PULL_A string = "01"  // B 拉黑 A
+	IS_BLACK_EACH_OTHER string = "00" // 互相拉黑
+
+	AGREE_ADD int = 11   // 互为好友
+	NOT_AGREE_ADD int = 10   // 对方拒绝 删除记录
+	WAITING_AGREE int = 13  // 等待同意
+
+)
+
 
 // 好友模型
 type FriendModel struct {
@@ -11,12 +28,48 @@ type FriendModel struct {
 	// 好友ID
 	FriendID string `gorm:"type:varchar(32);not null"`
 
-	// 是否拉黑 11:正常   10 userId 拉黑 friendId   01 friendId 拉黑userId
-	IsBlack int `gorm:"type:int(4);default:11"`
+	// 是否拉黑  userid -> friendId   11:正常   10 userId 拉黑 friendId   01 friendId 拉黑userId  00：互相拉黑
+	IsBlack string `gorm:"type:varchar(4);default:11";json:"-"`
 
-	// 添加好友方向 10: userid - friendId   01 friendId-userID
-	FriendFrom int `gorm:"type:int(4);not null"`
+	// 是否同意添加好友   userid -> friendId   10 f拒  11 互为好友 13等待确认
+	IsAgree int `gorm:"type:int(4);default:13";json:"-"`
+	// 好友备注
+	UtoFRemark string `gorm:"type:varchar(32)"`  // userid -> friendId 的备注
+	FtoURemark string `gorm:"type:varchar(32)`   // friendId --> userId 的备注
 
-	// 是否同意添加好友  0： 不同意   1：同意   2：待确认
-	IsAgree int `gorm:"type:int(4);default:2"`
+}
+
+
+// 添加好友参数验证
+func (f *FriendModel) Check() error{
+	if f.FriendID == "" || len(f.FriendID) != 32 {
+		return syserr.NewParameterError("参数不正确")
+	}
+	// 防止自己添加自己
+	if f.FriendID == f.UserID {
+		return syserr.NewParameterError("好友信息不对，请确认")
+	}
+	return nil
+}
+
+// 更新好友添加请求体
+type UpdateAddFReqModel struct {
+	ID string
+	State int  // 1:同意  0:拒绝
+	ReqId string   // 请求添加者
+	FtoURemark string
+}
+
+
+// 好友请求返回模型
+type FriendAddReqModel struct {
+	FriendID string
+	// 手机号
+	MobileNumber string
+	//昵称
+	NickName string
+	// 头像
+	Avatar string
+	//备注
+	Remark string
 }

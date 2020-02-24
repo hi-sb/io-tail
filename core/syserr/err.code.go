@@ -29,4 +29,6 @@ const (
 	sourceNotFoundErr =1071
 	// ParameterError
 	parameterError =1081
+	// serviceError 业务异常
+	serviceErr = 1091
 )

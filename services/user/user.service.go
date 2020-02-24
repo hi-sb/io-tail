@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/db/mysql"
@@ -9,6 +10,7 @@ import (
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
+	"strings"
 	"time"
 )
 
@@ -30,8 +32,26 @@ func (*UserService) get(request *restful.Request, response *restful.Response) {
 	rest.WriteEntity(user, err, response)
 }
 
+// 根据id获取用户信息
+func (*UserService) GetInfoById(ID string)*UserModel{
+	user := new(UserModel)
+	err := mysql.DB.Where("id =?", ID).First(user).Error
+	if err != nil {
+		return nil
+	}
+	return user
+}
 
-
+// 根据ids获取用户信息
+func (*UserService) GetInfoByIds(ids *[]string)*[]UserModel{
+	var users []UserModel
+	idArrayStr := strings.Replace(strings.Trim(fmt.Sprint(*ids), "[]"), " ", ",", -1)
+	err := mysql.DB.Where("id in (?)", idArrayStr).Find(&users).Error
+	if err != nil {
+		return nil
+	}
+	return &users
+}
 
 // 注册并登陆
 func (this *UserService) regOrlogin(request *restful.Request, response *restful.Response) {
@@ -88,6 +108,8 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 	}
 	rest.WriteEntity(token, err, response)
 }
+
+
 
 
 func init() {
