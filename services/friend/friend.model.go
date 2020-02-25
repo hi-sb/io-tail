@@ -63,7 +63,7 @@ type UpdateAddFReqModel struct {
 // 拉黑/还原拉黑好友模型
 type PullBlackModel struct {
 	FriendID string
-	isBlack int // 1: 拉黑  0:不拉黑
+	IsBlack int  // 0 拉黑  1 正常
 }
 
 

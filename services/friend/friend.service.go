@@ -227,7 +227,7 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 		if err != nil {
 			return err
 		}
-		friendModel = setIsBlack(friendModel,pullBlackModel.isBlack,userId)
+		friendModel = setIsBlack(friendModel,pullBlackModel.IsBlack,userId)
 		// 更新isBlack状态
 		err = mysql.DB.Where("id = ?", friendModel.ID).First(&FriendModel{}).Update(friendModel).First(friendModel).Error
 		if err != nil {
@@ -311,5 +311,6 @@ func init() {
 	webService.Route(webService.GET("/add-friend-req/items").To(friendService.getAddFriendReqList))
 	webService.Route(webService.GET("").To(friendService.getFriendList))
 	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
+	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
 	binder.BindAdd()
 }

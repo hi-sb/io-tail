@@ -170,6 +170,30 @@
 ```
 
 
+### 7. 好友黑名单设置（将好友加入or移除黑名单）
+##### URI
+> PUT  /friend/black
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"FriendID":"b2f3819077a6459b9728d7e3b504764e",  
+	"IsBlack":1    // 0 拉黑  1 正常
+
+}
+```
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
 
 
 
