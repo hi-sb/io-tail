@@ -22,6 +22,8 @@ var userService = new(user.UserService)
 const (
 	// 好友列表redisKey前缀
 	FRIEND_REDIS_PREFIX = "IO_TAIL_FRIEND_%s"
+	// 好友黑名单（发送消息给某个好友查询是否被拉黑）
+	FRIEND_BLACK_REDIS_PREFIX = "IO_TAIL_FRIEND_BLACK_%s"
 )
 
 
@@ -213,25 +215,24 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 			return errors.New("您还没有登录")
 		}
 
-		// 获取添加好友请求
+		// 获取对好友 黑名单操作
 		pullBlackModel := new(PullBlackModel)
 		err = request.ReadEntity(pullBlackModel)
 		if err != nil {
 			return err
 		}
-
-		// userid 拉黑 friendID
+		// 获取当前好友的关系
 		friendModel := new(FriendModel)
 		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,pullBlackModel.FriendID,pullBlackModel.FriendID,userId).First(friendModel).Error
 		if err != nil {
 			return err
 		}
-
-		setIsBlack(friendModel,pullBlackModel.isBlack,userId)
-
-		// 更新Redis
-
-
+		friendModel = setIsBlack(friendModel,pullBlackModel.isBlack,userId)
+		// 更新isBlack状态
+		err = mysql.DB.Where("id = ?", friendModel.ID).First(&FriendModel{}).Update(friendModel).First(friendModel).Error
+		if err != nil {
+			return err
+		}
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)
@@ -242,50 +243,63 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 
 
 
-// 设置拉黑值
-func setIsBlack(friendModel *FriendModel,status int,currentUserID string){
+// 设置拉黑值 并更新redis
+func setIsBlack(friendModel *FriendModel,status int,currentUserID string) *FriendModel{
 
+	// 0 拉黑  1 正常
 	if friendModel.UserID == currentUserID {  	// 如果当前用户是U 对F操作
-
-		// 原始状态 f拉黑u  u未拉黑f  即将操作  u拉黑f  设置状态为互相拉黑
+		// 原始状态f拉黑u,u未拉黑f(10)  即将操作 u拉黑f  设置状态为互相拉黑(00)
 		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 1 {
 			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+			// 将F加入U的黑名单
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
-		// 原始状态 f拉黑u   u拉黑f   即将操作 u未拉黑f  设置状态为互相拉黑
+		// 原始状态 互相拉黑（00）   即将操作 u恢复对f的关系  设置状态为（10）
 		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
 			friendModel.IsBlack = IS_BLACK_F_PULL_U
+			// 将F从U的黑名单的移除
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
-		// 原始状态 f未拉黑u   u未拉黑f   即将操作 u拉黑f  设置状态为互相拉黑
+
+		// 原始状态 正常（11）   即将操作 u拉黑f    设置状态（01）
 		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
 			friendModel.IsBlack = IS_BLACK_U_PULL_F
+			// 将F加入U的黑名单
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
-		// // 原始状态 f未拉黑u   u拉黑f   即将操作 u未拉黑f  设置状态为互相拉黑
+		// // 原始状态 （01）  即将操作 u未拉黑f  设置状态为正常（00）
 		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 0 {
 			friendModel.IsBlack = IS_NOT_BLACK
+			// 将F从U的黑名单的移除
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
 
 	} else if friendModel.FriendID == currentUserID {  // 如果当前用户是F 对U操作
-		// 原始状态 f未拉黑u  u拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
+		// 原始状态 f未拉黑u  u拉黑f （01）  即将操作  f拉黑u  设置状态为互相拉黑（00）
 		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 1 {
 			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
-		// 原始状态 f未拉黑u  u未拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
+		// 原始状态 f未拉黑u  u未拉黑f（11）  即将操作  f拉黑u  设置状态（10）
 		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
 			friendModel.IsBlack = IS_BLACK_F_PULL_U
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
 
-		// 原始状态 f拉黑u  u拉黑f  即将操作  f未拉黑u  设置状态为互相拉黑
+		// 原始状态 f拉黑u  u拉黑f（00）  即将操作  f未拉黑u  设置状态为 （01）
 		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
 			friendModel.IsBlack = IS_BLACK_U_PULL_F
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
 
-		// 原始状态 f拉黑u  u未拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
-		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
-			friendModel.IsBlack = IS_BLACK_F_PULL_U
+		// 原始状态 f拉黑u  u未拉黑f（10）  即将操作  f恢复拉黑u  设置状态为（11）
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 0 {
+			friendModel.IsBlack = IS_NOT_BLACK
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
-
-
 	}
+
+	return friendModel
 }
 
 
