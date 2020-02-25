@@ -138,7 +138,7 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 			if err != nil {
 				return err
 			}
-			// 互为好友 持久化到Redis TODO
+			// 互为好友 持久化到Redis
 			userIdKEY := fmt.Sprintf(FRIEND_REDIS_PREFIX,userId)
 			cache.RedisClient.SAdd(userIdKEY,addFReqModel.ReqId)
 			friendIdKEY := fmt.Sprintf(FRIEND_REDIS_PREFIX,addFReqModel.ReqId)
@@ -213,7 +213,22 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 			return errors.New("您还没有登录")
 		}
 
-		// 更新数据库状态
+		// 获取添加好友请求
+		pullBlackModel := new(PullBlackModel)
+		err = request.ReadEntity(pullBlackModel)
+		if err != nil {
+			return err
+		}
+
+		// userid 拉黑 friendID
+		friendModel := new(FriendModel)
+		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,pullBlackModel.FriendID,pullBlackModel.FriendID,userId).First(friendModel).Error
+		if err != nil {
+			return err
+		}
+
+		setIsBlack(friendModel,pullBlackModel.isBlack,userId)
+
 		// 更新Redis
 
 
@@ -227,6 +242,51 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 
 
 
+// 设置拉黑值
+func setIsBlack(friendModel *FriendModel,status int,currentUserID string){
+
+	if friendModel.UserID == currentUserID {  	// 如果当前用户是U 对F操作
+
+		// 原始状态 f拉黑u  u未拉黑f  即将操作  u拉黑f  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 1 {
+			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+		}
+		// 原始状态 f拉黑u   u拉黑f   即将操作 u未拉黑f  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
+			friendModel.IsBlack = IS_BLACK_F_PULL_U
+		}
+		// 原始状态 f未拉黑u   u未拉黑f   即将操作 u拉黑f  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
+			friendModel.IsBlack = IS_BLACK_U_PULL_F
+		}
+		// // 原始状态 f未拉黑u   u拉黑f   即将操作 u未拉黑f  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 0 {
+			friendModel.IsBlack = IS_NOT_BLACK
+		}
+
+	} else if friendModel.FriendID == currentUserID {  // 如果当前用户是F 对U操作
+		// 原始状态 f未拉黑u  u拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 1 {
+			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+		}
+		// 原始状态 f未拉黑u  u未拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
+			friendModel.IsBlack = IS_BLACK_F_PULL_U
+		}
+
+		// 原始状态 f拉黑u  u拉黑f  即将操作  f未拉黑u  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
+			friendModel.IsBlack = IS_BLACK_U_PULL_F
+		}
+
+		// 原始状态 f拉黑u  u未拉黑f  即将操作  f拉黑u  设置状态为互相拉黑
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
+			friendModel.IsBlack = IS_BLACK_F_PULL_U
+		}
+
+
+	}
+}
 
 
 

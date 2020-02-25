@@ -8,8 +8,8 @@ import (
 
 const (
 	IS_NOT_BLACK string = "11"  // 正常
-	IS_BLACK_A_PULL_B string = "10"  // A 拉黑 B
-	IS_BLACK_B_PULL_A string = "01"  // B 拉黑 A
+	IS_BLACK_U_PULL_F string = "10"  // u 拉黑 f
+	IS_BLACK_F_PULL_U string = "01"  // f 拉黑 u
 	IS_BLACK_EACH_OTHER string = "00" // 互相拉黑
 
 	AGREE_ADD int = 11   // 互为好友
@@ -60,6 +60,14 @@ type UpdateAddFReqModel struct {
 	FtoURemark string
 }
 
+// 拉黑/还原拉黑好友模型
+type PullBlackModel struct {
+	FriendID string
+	isBlack int // 1: 拉黑  0:不拉黑
+}
+
+
+
 
 // 好友请求返回模型
 type FriendAddReqModel struct {
@@ -73,3 +81,4 @@ type FriendAddReqModel struct {
 	//备注
 	Remark string
 }
+
