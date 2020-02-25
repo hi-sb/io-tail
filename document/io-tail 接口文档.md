@@ -233,6 +233,23 @@
 ```
 
 
+### 10. 发送消息时验证是否在黑名单
+##### URI
+> GET  /friend/check-send-msg/{friendId}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": true,   // true 可以发送  false 不可以发送
+    "Success": true
+}
+```
+
+
 
 
 

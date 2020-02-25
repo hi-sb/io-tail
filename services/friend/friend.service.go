@@ -294,8 +294,6 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 		if err != nil {
 			return err
 		}
-
-
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)
@@ -303,6 +301,33 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 
 
 // 发送消息时候验证黑名单/
+func (*FriendService) checkBlackList(request *restful.Request, response *restful.Response){
+	isSend,err := func() (bool,error) {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return false,errors.New("您还没有登录")
+		}
+
+		// 验证参数
+		friendId := request.PathParameter("friendId")
+		if friendId == "" {
+			return false,syserr.NewParameterError("参数不正确")
+		}
+
+		// userID 发送消息给 friendId  验证 friendId的黑名单中是否有userId
+		isMember,err := cache.RedisClient.SIsMember(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,friendId),userId).Result()
+		if err != nil {
+			return false,err
+		}
+		if !isMember {
+			return true,nil
+		}
+		return false,nil
+	}()
+	rest.WriteEntity(isSend, err, response)
+}
 
 
 
@@ -313,6 +338,7 @@ func init() {
 	webService.Route(webService.GET("/add-friend-req/items").To(friendService.getAddFriendReqList))
 	webService.Route(webService.GET("").To(friendService.getFriendList))
 	webService.Route(webService.GET("/search/{phone}").To(friendService.serchFriendByMobilePhone))
+	webService.Route(webService.GET("/check-send-msg/{friendId}").To(friendService.checkBlackList))
 	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
 	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
 	webService.Route(webService.DELETE("{friendId}").To(friendService.delFriend))
