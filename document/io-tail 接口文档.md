@@ -193,6 +193,30 @@
 }
 ```
 
+### 8. 根据手机号搜索好友（添加好友使用）
+##### URI
+> PUT  /friend/{phone}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "FriendID": "2d1ddbe7972f4d5c95063d49adaca031",
+        "MobileNumber": "",
+        "NickName": "",
+        "Avatar": "",
+        "Remark": ""
+    },
+    "Success": true
+}
+```
+
+
+
 
 
 

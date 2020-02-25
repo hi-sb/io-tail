@@ -10,6 +10,7 @@ import (
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/services/user"
+	"github.com/hi-sb/io-tail/utils"
 )
 
 type FriendService struct {
@@ -237,11 +238,57 @@ func (this *FriendService) pullBlackFriend(request *restful.Request, response *r
 	}()
 	rest.WriteEntity(nil, err, response)
 }
-// 根据手机号搜索好友
+
+// 根据手机号搜索 未添加的好友
+func (*FriendService) serchFriendByMobilePhone(request *restful.Request, response *restful.Response){
+	friendInfo,err := func() (*FriendAddReqModel,error) {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return nil,errors.New("您还没有登录")
+		}
+
+		// 验证参数
+		phone := request.PathParameter("phone")
+		if !utils.VerifyMobileFormat(phone) {
+			return nil,syserr.NewParameterError("手机号格式不正确")
+		}
+
+		userModel := userService.GetInfoByPhone(phone)
+		if userModel == nil {
+			return nil,syserr.NewServiceError("没有该用户")
+		}
+
+		var friendReq FriendAddReqModel
+		friendReq.FriendID = userModel.ID
+		friendReq.Avatar = userModel.Avatar
+		friendReq.MobileNumber = userModel.MobileNumber
+		friendReq.NickName = userModel.NickName
+		return &friendReq,nil
+	}()
+
+	rest.WriteEntity(friendInfo, err, response)
+}
+
 
 // 删除好友
 
-// 发送消息时候验证黑名单
+// 发送消息时候验证黑名单/
+
+
+
+
+func init() {
+	binder, webService := rest.NewJsonWebServiceBinder("/friend")
+	webService.Route(webService.POST("").To(friendService.addFriend))
+	webService.Route(webService.GET("/add-friend-req/items").To(friendService.getAddFriendReqList))
+	webService.Route(webService.GET("").To(friendService.getFriendList))
+	webService.Route(webService.GET("/search/{phone}").To(friendService.serchFriendByMobilePhone))
+	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
+	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
+	binder.BindAdd()
+}
 
 // 设置拉黑值 并更新redis
 func (*FriendService) setIsBlack(friendModel *FriendModel,status int,currentUserID string) *FriendModel{
@@ -301,15 +348,3 @@ func (*FriendService) setIsBlack(friendModel *FriendModel,status int,currentUser
 	return friendModel
 }
 
-
-
-
-func init() {
-	binder, webService := rest.NewJsonWebServiceBinder("/friend")
-	webService.Route(webService.POST("").To(friendService.addFriend))
-	webService.Route(webService.GET("/add-friend-req/items").To(friendService.getAddFriendReqList))
-	webService.Route(webService.GET("").To(friendService.getFriendList))
-	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
-	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
-	binder.BindAdd()
-}
