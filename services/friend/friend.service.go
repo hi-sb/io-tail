@@ -271,8 +271,36 @@ func (*FriendService) serchFriendByMobilePhone(request *restful.Request, respons
 	rest.WriteEntity(friendInfo, err, response)
 }
 
+// 删除好友关系
+func (*FriendService) delFriend(request *restful.Request, response *restful.Response){
+	err := func() error {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return errors.New("您还没有登录")
+		}
+		// 验证参数
+		friendId := request.PathParameter("friendId")
+		if friendId == "" {
+			return syserr.NewParameterError("参数不正确")
+		}
+		// 删除redis
+		cache.RedisClient.SRem(fmt.Sprintf(FRIEND_REDIS_PREFIX,userId),friendId)
+		cache.RedisClient.SRem(fmt.Sprintf(FRIEND_REDIS_PREFIX,friendId),userId)
 
-// 删除好友
+		// 删除DB
+		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,friendId,friendId,userId).Delete(&FriendModel{}).Error
+		if err != nil {
+			return err
+		}
+
+
+		return nil
+	}()
+	rest.WriteEntity(nil, err, response)
+}
+
 
 // 发送消息时候验证黑名单/
 
@@ -287,6 +315,7 @@ func init() {
 	webService.Route(webService.GET("/search/{phone}").To(friendService.serchFriendByMobilePhone))
 	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
 	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
+	webService.Route(webService.DELETE("{friendId}").To(friendService.delFriend))
 	binder.BindAdd()
 }
 
