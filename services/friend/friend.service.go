@@ -206,7 +206,7 @@ func (*FriendService) getFriendList(request *restful.Request, response *restful.
 }
 
 // 拉黑 还原 好友
-func (*FriendService) pullBlackFriend(request *restful.Request, response *restful.Response){
+func (this *FriendService) pullBlackFriend(request *restful.Request, response *restful.Response){
 	err := func() error{
 		// 验证是否登录
 		token := request.HeaderParameter(auth.AUTH_HEADER)
@@ -227,7 +227,7 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 		if err != nil {
 			return err
 		}
-		friendModel = setIsBlack(friendModel,pullBlackModel.IsBlack,userId)
+		friendModel = this.setIsBlack(friendModel,pullBlackModel.IsBlack,userId)
 		// 更新isBlack状态
 		err = mysql.DB.Where("id = ?", friendModel.ID).First(&FriendModel{}).Update(friendModel).First(friendModel).Error
 		if err != nil {
@@ -241,34 +241,33 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 
 // 删除好友
 
-
+// 发送消息时候验证黑名单
 
 // 设置拉黑值 并更新redis
-func setIsBlack(friendModel *FriendModel,status int,currentUserID string) *FriendModel{
-
+func (*FriendService) setIsBlack(friendModel *FriendModel,status int,currentUserID string) *FriendModel{
 	// 0 拉黑  1 正常
 	if friendModel.UserID == currentUserID {  	// 如果当前用户是U 对F操作
 		// 原始状态f拉黑u,u未拉黑f(10)  即将操作 u拉黑f  设置状态为互相拉黑(00)
-		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 1 {
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 0 {
 			friendModel.IsBlack = IS_BLACK_EACH_OTHER
 			// 将F加入U的黑名单
 			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
 		// 原始状态 互相拉黑（00）   即将操作 u恢复对f的关系  设置状态为（10）
-		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 1 {
 			friendModel.IsBlack = IS_BLACK_F_PULL_U
 			// 将F从U的黑名单的移除
 			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
 
 		// 原始状态 正常（11）   即将操作 u拉黑f    设置状态（01）
-		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 0 {
 			friendModel.IsBlack = IS_BLACK_U_PULL_F
 			// 将F加入U的黑名单
 			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
 		}
 		// // 原始状态 （01）  即将操作 u未拉黑f  设置状态为正常（00）
-		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 0 {
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 1 {
 			friendModel.IsBlack = IS_NOT_BLACK
 			// 将F从U的黑名单的移除
 			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
@@ -276,24 +275,24 @@ func setIsBlack(friendModel *FriendModel,status int,currentUserID string) *Frien
 
 	} else if friendModel.FriendID == currentUserID {  // 如果当前用户是F 对U操作
 		// 原始状态 f未拉黑u  u拉黑f （01）  即将操作  f拉黑u  设置状态为互相拉黑（00）
-		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 1 {
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 0 {
 			friendModel.IsBlack = IS_BLACK_EACH_OTHER
 			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
 		// 原始状态 f未拉黑u  u未拉黑f（11）  即将操作  f拉黑u  设置状态（10）
-		if friendModel.IsBlack == IS_NOT_BLACK && status == 1 {
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 0 {
 			friendModel.IsBlack = IS_BLACK_F_PULL_U
 			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
 
 		// 原始状态 f拉黑u  u拉黑f（00）  即将操作  f未拉黑u  设置状态为 （01）
-		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 0 {
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 1 {
 			friendModel.IsBlack = IS_BLACK_U_PULL_F
 			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
 
 		// 原始状态 f拉黑u  u未拉黑f（10）  即将操作  f恢复拉黑u  设置状态为（11）
-		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 0 {
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 1 {
 			friendModel.IsBlack = IS_NOT_BLACK
 			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
 		}
