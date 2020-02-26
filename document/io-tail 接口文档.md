@@ -162,7 +162,9 @@
             "MobileNumber": "191******",
             "NickName": "191******",
             "Avatar": "",
-            "Remark": ""
+            "Remark": "", // 备注
+            "Initial":""  // 首字母
+
         }
     ],
     "Success": true

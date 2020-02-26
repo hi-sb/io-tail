@@ -4,6 +4,8 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.37.4 // indirect
+	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
+	github.com/axgle/pinyin v0.0.0-20180208003132-d1557e083be4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/emicklei/go-restful v2.11.1+incompatible
 	github.com/go-redis/redis v6.15.6+incompatible

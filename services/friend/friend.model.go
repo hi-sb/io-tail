@@ -36,7 +36,6 @@ type FriendModel struct {
 	// 好友备注
 	UtoFRemark string `gorm:"type:varchar(32)"`  // userid -> friendId 的备注
 	FtoURemark string `gorm:"type:varchar(32)`   // friendId --> userId 的备注
-
 }
 
 
@@ -66,9 +65,6 @@ type PullBlackModel struct {
 	IsBlack int  // 0 拉黑  1 正常
 }
 
-
-
-
 // 好友请求返回模型
 type FriendAddReqModel struct {
 	FriendID string
@@ -80,5 +76,7 @@ type FriendAddReqModel struct {
 	Avatar string
 	//备注
 	Remark string
+	// 首字母
+	Initial string
 }
 

@@ -14,7 +14,6 @@ type UserModel struct {
 	Password string `gorm:"type:varchar(32);not null"`
 	// 手机号
 	MobileNumber string `gorm:"type:varchar(15);not null"`
-
 	//昵称
 	NickName string
 	// 头像

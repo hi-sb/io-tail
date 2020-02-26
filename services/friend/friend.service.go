@@ -3,6 +3,7 @@ package friend
 import (
 	"errors"
 	"fmt"
+	"github.com/axgle/pinyin"
 	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/cache"
@@ -11,6 +12,7 @@ import (
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/services/user"
 	"github.com/hi-sb/io-tail/utils"
+	"sort"
 )
 
 type FriendService struct {
@@ -163,7 +165,7 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 }
 
 // 获取好友列表
-func (*FriendService) getFriendList(request *restful.Request, response *restful.Response){
+func (this *FriendService) getFriendList(request *restful.Request, response *restful.Response){
 	friendList,err := func() (*[]FriendAddReqModel,error){
 		// 验证是否登录
 		token := request.HeaderParameter(auth.AUTH_HEADER)
@@ -199,8 +201,19 @@ func (*FriendService) getFriendList(request *restful.Request, response *restful.
 			}else if friend.ID == friendModel.FriendID {
 				friendReq.Remark = friendModel.UtoFRemark
 			}
+
+			// 获取字符串首字母
+			if friendReq.Remark == "" {
+				friendReq.Initial = string(this.checkAscII(int(pinyin.Convert(friendReq.NickName)[0])))
+			}else{
+				friendReq.Initial = string(this.checkAscII(int(pinyin.Convert(friendReq.Remark)[0])))
+			}
 			friendReqs = append(friendReqs, friendReq)
 		}
+		// 根据首字母排序、
+		sort.Slice(friendReqs, func(i, j int) bool {
+			return friendReqs[i].Initial > friendReqs[j].Initial
+		})
 		return &friendReqs,nil
 	}()
 	rest.WriteEntity(friendList, err, response)
@@ -298,7 +311,6 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 	}()
 	rest.WriteEntity(nil, err, response)
 }
-
 
 // 发送消息时候验证黑名单/
 func (*FriendService) checkBlackList(request *restful.Request, response *restful.Response){
@@ -403,3 +415,12 @@ func (*FriendService) setIsBlack(friendModel *FriendModel,status int,currentUser
 	return friendModel
 }
 
+// 首字母排序检查是否是a-z
+func (*FriendService) checkAscII(ascValue int) int{
+	if (ascValue>= 122 && ascValue <= 97) || (ascValue>= 65 && ascValue <= 90) {
+		return ascValue
+	}else{
+		// # 的ASCII值
+		return 35
+	}
+}
