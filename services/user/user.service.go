@@ -41,7 +41,6 @@ func (*UserService) GetInfoById(ID string)*UserModel{
 	}
 	return user
 }
-
 // 根据ids获取用户信息
 func (*UserService) GetInfoByIds(ids *[]string)*[]UserModel{
 	var users []UserModel
@@ -52,6 +51,17 @@ func (*UserService) GetInfoByIds(ids *[]string)*[]UserModel{
 	}
 	return &users
 }
+
+// 根据手机号查询用户信息
+func (*UserService) GetInfoByPhone(phone string) *UserModel {
+	user := new(UserModel)
+	err := mysql.DB.Where("mobile_number =?", phone).First(user).Error
+	if err != nil {
+		return nil
+	}
+	return user
+}
+
 
 // 注册并登陆
 func (this *UserService) regOrlogin(request *restful.Request, response *restful.Response) {

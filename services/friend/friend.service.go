@@ -10,6 +10,7 @@ import (
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/services/user"
+	"github.com/hi-sb/io-tail/utils"
 )
 
 type FriendService struct {
@@ -22,6 +23,8 @@ var userService = new(user.UserService)
 const (
 	// 好友列表redisKey前缀
 	FRIEND_REDIS_PREFIX = "IO_TAIL_FRIEND_%s"
+	// 好友黑名单（发送消息给某个好友查询是否被拉黑）
+	FRIEND_BLACK_REDIS_PREFIX = "IO_TAIL_FRIEND_BLACK_%s"
 )
 
 
@@ -138,7 +141,7 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 			if err != nil {
 				return err
 			}
-			// 互为好友 持久化到Redis TODO
+			// 互为好友 持久化到Redis
 			userIdKEY := fmt.Sprintf(FRIEND_REDIS_PREFIX,userId)
 			cache.RedisClient.SAdd(userIdKEY,addFReqModel.ReqId)
 			friendIdKEY := fmt.Sprintf(FRIEND_REDIS_PREFIX,addFReqModel.ReqId)
@@ -204,7 +207,7 @@ func (*FriendService) getFriendList(request *restful.Request, response *restful.
 }
 
 // 拉黑 还原 好友
-func (*FriendService) pullBlackFriend(request *restful.Request, response *restful.Response){
+func (this *FriendService) pullBlackFriend(request *restful.Request, response *restful.Response){
 	err := func() error{
 		// 验证是否登录
 		token := request.HeaderParameter(auth.AUTH_HEADER)
@@ -213,20 +216,118 @@ func (*FriendService) pullBlackFriend(request *restful.Request, response *restfu
 			return errors.New("您还没有登录")
 		}
 
-		// 更新数据库状态
-		// 更新Redis
-
-
+		// 获取对好友 黑名单操作
+		pullBlackModel := new(PullBlackModel)
+		err = request.ReadEntity(pullBlackModel)
+		if err != nil {
+			return err
+		}
+		// 获取当前好友的关系
+		friendModel := new(FriendModel)
+		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,pullBlackModel.FriendID,pullBlackModel.FriendID,userId).First(friendModel).Error
+		if err != nil {
+			return err
+		}
+		friendModel = this.setIsBlack(friendModel,pullBlackModel.IsBlack,userId)
+		// 更新isBlack状态
+		err = mysql.DB.Where("id = ?", friendModel.ID).First(&FriendModel{}).Update(friendModel).First(friendModel).Error
+		if err != nil {
+			return err
+		}
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)
 }
-// 根据手机号搜索好友
 
-// 删除好友
+// 根据手机号搜索 未添加的好友
+func (*FriendService) serchFriendByMobilePhone(request *restful.Request, response *restful.Response){
+	friendInfo,err := func() (*FriendAddReqModel,error) {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return nil,errors.New("您还没有登录")
+		}
+
+		// 验证参数
+		phone := request.PathParameter("phone")
+		if !utils.VerifyMobileFormat(phone) {
+			return nil,syserr.NewParameterError("手机号格式不正确")
+		}
+
+		userModel := userService.GetInfoByPhone(phone)
+		if userModel == nil {
+			return nil,syserr.NewServiceError("没有该用户")
+		}
+
+		var friendReq FriendAddReqModel
+		friendReq.FriendID = userModel.ID
+		friendReq.Avatar = userModel.Avatar
+		friendReq.MobileNumber = userModel.MobileNumber
+		friendReq.NickName = userModel.NickName
+		return &friendReq,nil
+	}()
+
+	rest.WriteEntity(friendInfo, err, response)
+}
+
+// 删除好友关系
+func (*FriendService) delFriend(request *restful.Request, response *restful.Response){
+	err := func() error {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return errors.New("您还没有登录")
+		}
+		// 验证参数
+		friendId := request.PathParameter("friendId")
+		if friendId == "" {
+			return syserr.NewParameterError("参数不正确")
+		}
+		// 删除redis
+		cache.RedisClient.SRem(fmt.Sprintf(FRIEND_REDIS_PREFIX,userId),friendId)
+		cache.RedisClient.SRem(fmt.Sprintf(FRIEND_REDIS_PREFIX,friendId),userId)
+
+		// 删除DB
+		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,friendId,friendId,userId).Delete(&FriendModel{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+	rest.WriteEntity(nil, err, response)
+}
 
 
+// 发送消息时候验证黑名单/
+func (*FriendService) checkBlackList(request *restful.Request, response *restful.Response){
+	isSend,err := func() (bool,error) {
+		// 验证是否登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return false,errors.New("您还没有登录")
+		}
 
+		// 验证参数
+		friendId := request.PathParameter("friendId")
+		if friendId == "" {
+			return false,syserr.NewParameterError("参数不正确")
+		}
+
+		// userID 发送消息给 friendId  验证 friendId的黑名单中是否有userId
+		isMember,err := cache.RedisClient.SIsMember(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,friendId),userId).Result()
+		if err != nil {
+			return false,err
+		}
+		if !isMember {
+			return true,nil
+		}
+		return false,nil
+	}()
+	rest.WriteEntity(isSend, err, response)
+}
 
 
 
@@ -236,6 +337,69 @@ func init() {
 	webService.Route(webService.POST("").To(friendService.addFriend))
 	webService.Route(webService.GET("/add-friend-req/items").To(friendService.getAddFriendReqList))
 	webService.Route(webService.GET("").To(friendService.getFriendList))
+	webService.Route(webService.GET("/search/{phone}").To(friendService.serchFriendByMobilePhone))
+	webService.Route(webService.GET("/check-send-msg/{friendId}").To(friendService.checkBlackList))
 	webService.Route(webService.PUT("/update-friend-req").To(friendService.updateFriendIsAgree))
+	webService.Route(webService.PUT("/black").To(friendService.pullBlackFriend))
+	webService.Route(webService.DELETE("{friendId}").To(friendService.delFriend))
 	binder.BindAdd()
 }
+
+// 设置拉黑值 并更新redis
+func (*FriendService) setIsBlack(friendModel *FriendModel,status int,currentUserID string) *FriendModel{
+	// 0 拉黑  1 正常
+	if friendModel.UserID == currentUserID {  	// 如果当前用户是U 对F操作
+		// 原始状态f拉黑u,u未拉黑f(10)  即将操作 u拉黑f  设置状态为互相拉黑(00)
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 0 {
+			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+			// 将F加入U的黑名单
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
+		}
+		// 原始状态 互相拉黑（00）   即将操作 u恢复对f的关系  设置状态为（10）
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 1 {
+			friendModel.IsBlack = IS_BLACK_F_PULL_U
+			// 将F从U的黑名单的移除
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
+		}
+
+		// 原始状态 正常（11）   即将操作 u拉黑f    设置状态（01）
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 0 {
+			friendModel.IsBlack = IS_BLACK_U_PULL_F
+			// 将F加入U的黑名单
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
+		}
+		// // 原始状态 （01）  即将操作 u未拉黑f  设置状态为正常（00）
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 1 {
+			friendModel.IsBlack = IS_NOT_BLACK
+			// 将F从U的黑名单的移除
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.FriendID)
+		}
+
+	} else if friendModel.FriendID == currentUserID {  // 如果当前用户是F 对U操作
+		// 原始状态 f未拉黑u  u拉黑f （01）  即将操作  f拉黑u  设置状态为互相拉黑（00）
+		if friendModel.IsBlack == IS_BLACK_U_PULL_F && status == 0 {
+			friendModel.IsBlack = IS_BLACK_EACH_OTHER
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
+		}
+		// 原始状态 f未拉黑u  u未拉黑f（11）  即将操作  f拉黑u  设置状态（10）
+		if friendModel.IsBlack == IS_NOT_BLACK && status == 0 {
+			friendModel.IsBlack = IS_BLACK_F_PULL_U
+			cache.RedisClient.SAdd(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
+		}
+
+		// 原始状态 f拉黑u  u拉黑f（00）  即将操作  f未拉黑u  设置状态为 （01）
+		if friendModel.IsBlack == IS_BLACK_EACH_OTHER && status == 1 {
+			friendModel.IsBlack = IS_BLACK_U_PULL_F
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
+		}
+
+		// 原始状态 f拉黑u  u未拉黑f（10）  即将操作  f恢复拉黑u  设置状态为（11）
+		if friendModel.IsBlack == IS_BLACK_F_PULL_U && status == 1 {
+			friendModel.IsBlack = IS_NOT_BLACK
+			cache.RedisClient.SRem(fmt.Sprintf(FRIEND_BLACK_REDIS_PREFIX,currentUserID),friendModel.UserID)
+		}
+	}
+
+	return friendModel
+}
+
