@@ -22,7 +22,9 @@
 # 业务文档
 > 说明： 完成的API  http://IP+端口+uri
 
-### 1.获取短信验证码
+## 一、登录鉴权
+
+### 1.1 获取短信验证码
 
 ##### URI
 > POST  /verify/sms
@@ -45,7 +47,7 @@
 }
 ```
 
-### 2.登录注册二合一接口
+### 1.2 登录注册二合一接口
 ##### URI
 > POST  /user/login
 
@@ -68,8 +70,9 @@
 }
 ```
 
+## 二、好友业务
 
-### 3. 添加好友
+### 2.1 添加好友
 ##### URI
 > POST  /friend 
 
@@ -94,7 +97,7 @@
 ```
 
 
-### 4. 获取当前用户添加好友的请求
+### 2.2 获取当前用户添加好友的请求
 ##### URI
 > POST  /friend/add-friend-req/items
 
@@ -118,7 +121,7 @@
 ```
 
 
-### 5. 更新添加好友状态（拒绝/同意）
+### 2.3 更新添加好友状态（拒绝/同意）
 ##### URI
 > PUT  /friend/update-friend-req
 
@@ -144,7 +147,7 @@
 }
 ```
 
-### 6.获取好友列表
+### 2.4 获取好友列表
 ##### URI
 > GET  /friend
 
@@ -172,7 +175,7 @@
 ```
 
 
-### 7. 好友黑名单设置（将好友加入or移除黑名单）
+### 2.5 好友黑名单设置（将好友加入or移除黑名单）
 ##### URI
 > PUT  /friend/black
 
@@ -195,7 +198,7 @@
 }
 ```
 
-### 8. 根据手机号搜索好友（添加好友使用）
+### 2.6 根据手机号搜索好友（添加好友使用）
 ##### URI
 > GET  /friend/{phone}
 
@@ -218,7 +221,7 @@
 ```
 
 
-### 9. 删除好友
+### 2.7 删除好友
 ##### URI
 > DELETE  /friend/{friendId}
 
@@ -235,7 +238,7 @@
 ```
 
 
-### 10. 发送消息时验证是否在黑名单
+### 2.8 发送消息时验证是否在黑名单
 ##### URI
 > GET  /friend/check-send-msg/{friendId}
 
@@ -251,6 +254,56 @@
 }
 ```
 
+
+## 三、群组业务
+### 3.1 创建群
+##### URI
+> POST  /group
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupName":"", // 默认名称 群聊(成员数)
+	"GroupAnnouncement": "群公告",
+	"GroupMembers":"1111,2222,3333"   // 成员ID（当前用户除外）
+}
+```
+##### 响应内容
+```
+{
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "GroupModel": {
+            "ID": "a05ce9eb171d46c8b8467e4ec354b949",
+            "CreatedAt": "2020-02-27T15:09:49+08:00",
+            "UpdatedAt": "2020-02-27T15:09:49+08:00",
+            "GroupName": "群聊(4)",
+            "GroupAnnouncement": "群公告",
+            "GreateUserID": "2d1ddbe7972f4d5c95063d49adaca031",
+            "GroupChatStatus": 1    // 0:全体禁言  1:正常
+        },
+        "GroupMemberDetail": [
+            {
+                "ID": "",
+                "CreatedAt": "0001-01-01T00:00:00Z",
+                "UpdatedAt": "0001-01-01T00:00:00Z",
+                "GroupID": "",
+                "GroupMermerID": "",
+                "GroupMermerNickName": "",   //群昵称
+                "GroupMemberRole": 0,  //  0: 普通成员 1.群主  2。管理员
+                "MobileNumber": "",
+                "NickName": "",    // 用户昵称
+                "Avatar": ""
+            }
+        ]
+    },
+    "Success": true
+}
+}
+```
 
 
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/topic"
 	_ "github.com/hi-sb/io-tail/services/friend"
+	_ "github.com/hi-sb/io-tail/services/group"
 	_ "github.com/hi-sb/io-tail/services/sms"
 	_ "github.com/hi-sb/io-tail/services/user"
 	"net/http"
