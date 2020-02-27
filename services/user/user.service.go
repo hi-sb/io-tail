@@ -1,10 +1,12 @@
 package user
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/core/auth"
+	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/rest"
@@ -20,6 +22,12 @@ type UserService struct {
 //地址
 var userService = new(UserService)
 
+const (
+	// key
+	USER_BASE_INFO_REDIS_KEY = "USER_BASE_INFO"
+	//  field
+	USER_BASE_INFO_REDIS_PREFIX = "USER_BASE_INFO_"
+)
 
 //用token 获取用户信息
 func (*UserService) get(request *restful.Request, response *restful.Response) {
@@ -35,7 +43,19 @@ func (*UserService) get(request *restful.Request, response *restful.Response) {
 // 根据id获取用户信息
 func (*UserService) GetInfoById(ID string)*UserModel{
 	user := new(UserModel)
-	err := mysql.DB.Where("id =?", ID).First(user).Error
+	// 从redis获取
+	result ,err := cache.RedisClient.HGet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,ID)).Result()
+	if err == nil && result != "" {
+		err := json.Unmarshal([]byte(result), user)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return user
+	}
+
+	println("redis 中没有找到")
+
+	err = mysql.DB.Where("id =?", ID).First(user).Error
 	if err != nil {
 		return nil
 	}
@@ -104,6 +124,14 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 			})
 		}else {
 			userModel.ID = user.ID
+		}
+		// 缓存用户信息
+		data,err := json.Marshal(userModel)
+		if err == nil {
+			_,err = cache.RedisClient.HSet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,userModel.ID),data).Result()
+			if err !=nil {
+				println(err)
+			}
 		}
 	}
 	// 完成注册 并登录

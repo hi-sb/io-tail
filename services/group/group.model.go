@@ -51,10 +51,19 @@ func (g *CreateGroupModel) checkParams() error {
 	return nil
 }
 
+
+// 群信息和成员列表
 type GroupInfoAndMembersModel struct {
 	GroupModel GroupModel
 	GroupMemberDetail *[]GroupMemberModel
 }
+
+// 新用户加入群聊模型
+type NewMemberJoinModel struct {
+	GroupID string
+	userID string
+}
+
 
 // 获取成员和成员基础信息
 func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMembersModel,error) {
@@ -67,14 +76,12 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMember
 		}
 
 		data,err := json.Marshal(groupModel)
-		println(data)
 		if err == nil {
 			_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
 			if err !=nil {
-				println("缓存失败")
+				println(err)
 			}
 		}
-
 		// 群成员list
 		gmList,err := new(GroupMemberModel).GetMembersInfo(groupID)
 		groupAndMemberInfo := new(GroupInfoAndMembersModel)
@@ -83,4 +90,27 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMember
 		return groupAndMemberInfo,nil
 	}()
 	return groupAndMemberInfo,err
+}
+
+
+// 获取群基本信息
+func (g *GroupModel) GetGroupInfo(groupID string) (*GroupModel,error) {
+	// 群基础信息
+	groupModel := new(GroupModel)
+
+	// read redis
+	data,err :=cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
+	if err == nil && data != "" {
+		err := json.Unmarshal([]byte(data), groupModel)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return groupModel,nil
+	}
+	// read DB
+	err = mysql.DB.Where("id = ?",groupID).First(groupModel).Error
+	if err !=nil {
+		return nil,err
+	}
+	return groupModel,nil
 }

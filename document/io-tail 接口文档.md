@@ -290,7 +290,7 @@
                 "ID": "",
                 "CreatedAt": "0001-01-01T00:00:00Z",
                 "UpdatedAt": "0001-01-01T00:00:00Z",
-                "GroupID": "",
+                "GroupID": "a05ce9eb171d46c8b8467e4ec354b949",
                 "GroupMermerID": "",
                 "GroupMermerNickName": "",   //群昵称
                 "GroupMemberRole": 0,  //  0: 普通成员 1.群主  2。管理员

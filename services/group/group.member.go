@@ -49,8 +49,14 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string) (*[]GroupMemberModel,e
 		var groupMemberDetails []GroupMemberModel
 		for _,memberModel := range groupMemberModels{
 			var gmd GroupMemberModel
+			gmd.GroupID = groupID
 			userInfo := userService.GetInfoById(memberModel.GroupMermerID)
 			if userInfo != nil{
+				gmd.CreatedAt = memberModel.CreatedAt
+				gmd.UpdatedAt = memberModel.UpdatedAt
+				gmd.GroupMermerID = memberModel.GroupMermerID
+				gmd.ID = memberModel.ID
+				gmd.GroupMermerNickName = memberModel.NickName
 				gmd.MobileNumber = userInfo.MobileNumber
 				gmd.Avatar = userInfo.Avatar
 				gmd.NickName = userInfo.NickName
@@ -59,7 +65,6 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string) (*[]GroupMemberModel,e
 				if err == nil {
 					cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX,groupID),userInfo.ID, data)
 				}
-
 			}
 		}
 		return &groupMemberDetails,nil
