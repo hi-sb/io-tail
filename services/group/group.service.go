@@ -13,10 +13,17 @@ import (
 type GroupService struct {
 }
 
+const (
+	// 群基础信息
+	GROUP_BASE_INFO_REDIS_PREFIX = "GROUP_BASE_INFO_%s"
+	// 群成员
+	GROUP_MEMBER_INFO_REDIS_PREFIX = "GROUP_MEMBER_INFO_%s"
+)
+
 var groupService = new(GroupService)
 
 
-//  创建群
+//  创建群  TODO  CACHE
 func (*GroupService) createGroup(request *restful.Request, response *restful.Response){
 	groupInfoAndMembers,err := func() (*GroupInfoAndMembersModel,error){
 		// 验证是否登录
@@ -82,6 +89,10 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 	}()
 	rest.WriteEntity(groupInfoAndMembers, err, response)
 }
+
+
+
+
 
 
 func init(){

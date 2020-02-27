@@ -1,6 +1,9 @@
 package group
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/services/user"
@@ -52,6 +55,11 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string) (*[]GroupMemberModel,e
 				gmd.Avatar = userInfo.Avatar
 				gmd.NickName = userInfo.NickName
 				groupMemberDetails = append(groupMemberDetails, gmd)
+				data,err := json.Marshal(gmd)
+				if err == nil {
+					cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX,groupID),userInfo.ID, data)
+				}
+
 			}
 		}
 		return &groupMemberDetails,nil

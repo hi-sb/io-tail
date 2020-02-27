@@ -1,7 +1,9 @@
 package group
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/syserr"
@@ -63,6 +65,16 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMember
 		if err !=nil {
 			return nil,err
 		}
+
+		data,err := json.Marshal(groupModel)
+		println(data)
+		if err == nil {
+			_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+			if err !=nil {
+				println("缓存失败")
+			}
+		}
+
 		// 群成员list
 		gmList,err := new(GroupMemberModel).GetMembersInfo(groupID)
 		groupAndMemberInfo := new(GroupInfoAndMembersModel)
