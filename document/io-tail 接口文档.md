@@ -327,7 +327,88 @@
 }
 ```
 
-### 3.2 邀请新成员加入
+
+
+### 3.2 获取群基本信息 以及成员列表
+##### URI
+> GET  /group/{groupId}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "GroupModel": {
+            "ID": "be43b195a3bb4eb5abe73f246f8d9c47",
+            "CreatedAt": "2020-02-28T15:34:47+08:00",
+            "UpdatedAt": "2020-02-28T15:34:47+08:00",
+            "GroupName": "群聊(4)",
+            "GroupAnnouncement": "群公告",
+            "GreateUserID": "e52781a030724f9080e88f0847caf400",
+            "GroupChatStatus": 1
+        },
+        "GroupMemberDetail": [
+            {
+                "ID": "3a9566c0d1b94b0e9120ec64334fd042",
+                "CreatedAt": "2020-02-28T15:34:47+08:00",
+                "UpdatedAt": "2020-02-28T15:34:47+08:00",
+                "GroupID": "be43b195a3bb4eb5abe73f246f8d9c47",
+                "GroupMermerID": "23a463f1e3f5459ea252d3817682f2d9",
+                "GroupMermerNickName": "",
+                "GroupMemberRole": 0,
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            },
+            {
+                "ID": "95db3b530b56462ea849ced1fd1cfd34",
+                "CreatedAt": "2020-02-28T15:34:47+08:00",
+                "UpdatedAt": "2020-02-28T15:34:47+08:00",
+                "GroupID": "be43b195a3bb4eb5abe73f246f8d9c47",
+                "GroupMermerID": "e52781a030724f9080e88f0847caf400",
+                "GroupMermerNickName": "",
+                "GroupMemberRole": 0,
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            },
+            {
+                "ID": "08577adfbf8c4d56859f6614ad54400c",
+                "CreatedAt": "2020-02-28T15:38:17.7590018+08:00",
+                "UpdatedAt": "2020-02-28T15:38:17.7590018+08:00",
+                "GroupID": "be43b195a3bb4eb5abe73f246f8d9c47",
+                "GroupMermerID": "ba94ea2ae217413bb393a2573ca571b7",
+                "GroupMermerNickName": "",
+                "GroupMemberRole": 0,
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            },
+            {
+                "ID": "61d3c9bf8e1a4944a67ec76242aea139",
+                "CreatedAt": "2020-02-28T15:34:47+08:00",
+                "UpdatedAt": "2020-02-28T15:34:47+08:00",
+                "GroupID": "be43b195a3bb4eb5abe73f246f8d9c47",
+                "GroupMermerID": "ef0966125d9a475b8b02ef1b732298f1",
+                "GroupMermerNickName": "",
+                "GroupMemberRole": 0,
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            }
+        ]
+    },
+    "Success": true
+}
+```
+
+
+
+
+### 3.3 邀请新成员加入
 ##### URI
 > POST  /group-member/join
 
