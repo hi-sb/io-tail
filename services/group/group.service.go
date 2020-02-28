@@ -22,7 +22,7 @@ const (
 
 var groupService = new(GroupService)
 var groupModelService = new(GroupModel)
-var groupMemberService = new(GroupMemberService)
+
 
 
 //  创建群
@@ -93,42 +93,12 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 }
 
 
-// 邀请新用户加入群
-func (*GroupService) newMemberJoin(request *restful.Request, response *restful.Response){
-	groupInfoAndMembers,err := func() (*GroupInfoAndMembersModel,error) {
-		// 验证登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil,errors.New("您还没有登录")
-		}
 
-		// 读取body
-		joinModel := new(NewMemberJoinModel)
-		err = request.ReadEntity(joinModel)
-		if err != nil {
-			return nil,err
-		}
-
-		// 查询群是否存在
-		groupModel,err = groupModelService.GetGroupInfo(joinModel.GroupID)
-		if err != nil {
-			return nil,err
-		}
-
-		// 查询当前邀请者是否已经加入 没有加入则持久化
-		err = groupMemberService.checkMemberAndJoin(joinModel.GroupID,joinModel.userID)
-
-		return nil,nil
-	}()
-	rest.WriteEntity(groupInfoAndMembers, err, response)
-}
 
 
 
 func init(){
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))
-	webService.Route(webService.POST("/member/join").To(groupService.createGroup))
 	binder.BindAdd()
 }

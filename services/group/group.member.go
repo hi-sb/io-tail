@@ -34,8 +34,6 @@ type GroupMemberModel struct {
 
 }
 
-
-
 var userService = new(user.UserService)
 
 // 获取成员和成员基础信息
@@ -70,4 +68,24 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string) (*[]GroupMemberModel,e
 		return &groupMemberDetails,nil
 	}()
 	return groupMemberDetails,err
+}
+
+
+
+// 新用户加入群聊模型
+type NewMemberJoinModel struct {
+	GroupID string
+	UserID string
+}
+
+// 新用户加入群聊返回模型
+type  NewMemberJoinResModel struct {
+	// 当前用户
+	CurrentUser *user.UserModel
+	// 被邀请者
+	InvitationUser *user.UserModel
+	// 群基础信息
+	GroupInfo *GroupModel
+	// 群人数
+	Count int
 }

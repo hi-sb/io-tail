@@ -7,7 +7,7 @@ import (
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/syserr"
-	"strings"
+	"strconv"
 )
 
 // 群聊设置
@@ -45,7 +45,7 @@ func (g *CreateGroupModel) checkParams() error {
 		return syserr.NewParameterError("参数有误，不能创建群聊")
 	}
 	if g.GroupName == "" {
-		g.GroupName = fmt.Sprintf( "群聊(%d)",len(strings.Split(g.GroupMembers, ","))+1)
+		g.GroupName = "群聊"
 		return nil
 	}
 	return nil
@@ -58,11 +58,7 @@ type GroupInfoAndMembersModel struct {
 	GroupMemberDetail *[]GroupMemberModel
 }
 
-// 新用户加入群聊模型
-type NewMemberJoinModel struct {
-	GroupID string
-	userID string
-}
+
 
 
 // 获取成员和成员基础信息
@@ -82,11 +78,14 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMember
 				println(err)
 			}
 		}
+
 		// 群成员list
 		gmList,err := new(GroupMemberModel).GetMembersInfo(groupID)
 		groupAndMemberInfo := new(GroupInfoAndMembersModel)
 		groupAndMemberInfo.GroupModel = *groupModel
 		groupAndMemberInfo.GroupMemberDetail = gmList
+		num := len(*groupAndMemberInfo.GroupMemberDetail)
+		groupAndMemberInfo.GroupModel.GroupName = groupAndMemberInfo.GroupModel.GroupName + "(" +strconv.Itoa(num) +")"
 		return groupAndMemberInfo,nil
 	}()
 	return groupAndMemberInfo,err
