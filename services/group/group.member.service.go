@@ -93,7 +93,7 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 	rest.WriteEntity(memberJoinResModel, err, response)
 }
 
-// 从当前群组移除成员
+// 群主或者管理员  从当前群组移除成员
 func (*GroupMemberService) removeMember(request *restful.Request, response *restful.Response) {
 	err := func() error {
 		// 验证登录
@@ -126,6 +126,18 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 	}()
 	rest.WriteEntity(nil, err, response)
 }
+
+
+
+
+// 设置管理员
+
+// 对某个成员设置禁言
+
+// 设群管理员设置成员昵称
+
+// 推出群聊  普通成员不能退出群聊
+
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group-member")

@@ -15,8 +15,12 @@ require (
 	github.com/hpcloud/tail v1.0.0
 	github.com/jinzhu/gorm v1.9.12
 	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/lestrrat-go/file-rotatelogs v2.3.0+incompatible
+	github.com/lestrrat-go/strftime v1.0.1 // indirect
 	github.com/mojocn/base64Captcha v1.3.0
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/satori/go.uuid v1.2.0
+	github.com/sirupsen/logrus v1.2.0
 	golang.org/x/sys v0.0.0-20200116001909-b77594299b42 // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect

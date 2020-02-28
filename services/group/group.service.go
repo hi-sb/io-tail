@@ -94,12 +94,6 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 //  获取当前群信息 以及群成员
 func (*GroupService) findOne(request *restful.Request, response *restful.Response) {
 	groupAndMemberInfo, err := func() (*GroupInfoAndMembersModel, error) {
-		// 验证登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil, errors.New("您还没有登录")
-		}
 		// 读取body
 		groupID := request.PathParameter("groupID")
 		if groupID == "" {
@@ -110,11 +104,32 @@ func (*GroupService) findOne(request *restful.Request, response *restful.Respons
 	rest.WriteEntity(groupAndMemberInfo, err, response)
 }
 
+// 更新群公告
+func (*GroupService) updateGroupNotice(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupModel := new(GroupModel)
+		err := request.ReadEntity(groupModel)
+		if err != nil {
+			return err
+		}
+		err = mysql.DB.Model(groupModel).UpdateColumn("group_announcement",groupModel.GroupAnnouncement).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
+
+// 群禁言设置
+
 
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))
 	webService.Route(webService.GET("/{groupID}").To(groupService.findOne))
+	webService.Route(webService.PUT("/global/notice").To(groupService.updateGroupNotice))
+	webService.Route(webService.PUT("/global/forbidden/words").To(groupService.findOne))
 	binder.BindAdd()
 }
