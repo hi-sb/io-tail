@@ -13,7 +13,6 @@ import (
 // 群成员
 type GroupMemberModel struct {
 	db.BaseModel
-
 	// 群ID
 	GroupID string `gorm:"type:varchar(32);not null"`
 
@@ -79,12 +78,12 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 			}else {
 				var groupMemberModels []GroupMemberModel
 				for _, v := range dataMap {
-					var gmd GroupMemberModel
+					gmd := new(GroupMemberModel)
 					err := json.Unmarshal([]byte(v), gmd)
 					if err != nil {
 						fmt.Println(err)
 					}
-					groupMemberModels = append(groupMemberModels, gmd)
+					groupMemberModels = append(groupMemberModels, *gmd)
 				}
 
 				return &groupMemberModels,nil

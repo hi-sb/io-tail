@@ -6,6 +6,7 @@ import (
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
+	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/jinzhu/gorm"
 	"strings"
 )
@@ -23,33 +24,31 @@ const (
 var groupService = new(GroupService)
 var groupModelService = new(GroupModel)
 
-
-
 //  创建群
-func (*GroupService) createGroup(request *restful.Request, response *restful.Response){
-	groupInfoAndMembers,err := func() (*GroupInfoAndMembersModel,error){
+func (*GroupService) createGroup(request *restful.Request, response *restful.Response) {
+	groupInfoAndMembers, err := func() (*GroupInfoAndMembersModel, error) {
 		// 验证是否登录
 		token := request.HeaderParameter(auth.AUTH_HEADER)
 		userId, err := auth.GetUID(token)
 		if userId == "" || err != nil {
-			return nil,errors.New("您还没有登录")
+			return nil, errors.New("您还没有登录")
 		}
 
 		// 读取参数
 		createGroup := new(CreateGroupModel)
 		err = request.ReadEntity(createGroup)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 		// 验证参数
 		err = createGroup.checkParams()
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 
 		/**
 		创建群流程开始  1.创建主群信息  2.写入成员
-		 */
+		*/
 		// 主群模型
 		groupModel := new(GroupModel)
 		groupModel.GreateUserID = userId
@@ -62,7 +61,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 			members := strings.Split(createGroup.GroupMembers, ",")
 			members = append(members, userId)
 			// 持久化群成员
-			for _,member := range members{
+			for _, member := range members {
 				groupMember := new(GroupMemberModel)
 				groupMember.GroupID = groupModel.ID
 				if member == userId {
@@ -87,18 +86,35 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 		})
 
 		// 返回初始化后的群信息
-		return groupModelService.GetGroupInfoAndMembers(groupModel.ID,true)
+		return groupModelService.GetGroupInfoAndMembers(groupModel.ID, true)
 	}()
 	rest.WriteEntity(groupInfoAndMembers, err, response)
 }
 
+//  获取当前群信息 以及群成员
+func (*GroupService) findOne(request *restful.Request, response *restful.Response) {
+	groupAndMemberInfo, err := func() (*GroupInfoAndMembersModel, error) {
+		// 验证登录
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		userId, err := auth.GetUID(token)
+		if userId == "" || err != nil {
+			return nil, errors.New("您还没有登录")
+		}
+		// 读取body
+		groupID := request.PathParameter("groupID")
+		if groupID == "" {
+			return nil, syserr.NewParameterError("参数不正确")
+		}
+		return groupModelService.GetGroupInfoAndMembers(groupID,false)
+	}()
+	rest.WriteEntity(groupAndMemberInfo, err, response)
+}
 
 
 
-
-
-func init(){
+func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))
+	webService.Route(webService.GET("/{groupID}").To(groupService.findOne))
 	binder.BindAdd()
 }
