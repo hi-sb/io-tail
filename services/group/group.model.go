@@ -60,8 +60,6 @@ type GroupInfoAndMembersModel struct {
 }
 
 
-var groupMemberModelService = new(GroupMemberModel)
-
 /**
     isNewGroup: true 新建   false 缓存读取
 	获取成员和成员基础信息

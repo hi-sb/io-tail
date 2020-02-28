@@ -96,7 +96,6 @@
 }
 ```
 
-
 ### 2.2 获取当前用户添加好友的请求
 ##### URI
 > POST  /friend/add-friend-req/items
@@ -119,7 +118,6 @@
     "Success": true
 }
 ```
-
 
 ### 2.3 更新添加好友状态（拒绝/同意）
 ##### URI
@@ -174,7 +172,6 @@
 }
 ```
 
-
 ### 2.5 好友黑名单设置（将好友加入or移除黑名单）
 ##### URI
 > PUT  /friend/black
@@ -220,7 +217,6 @@
 }
 ```
 
-
 ### 2.7 删除好友
 ##### URI
 > DELETE  /friend/{friendId}
@@ -236,7 +232,6 @@
     "Success": true
 }
 ```
-
 
 ### 2.8 发送消息时验证是否在黑名单
 ##### URI
@@ -327,8 +322,6 @@
 }
 ```
 
-
-
 ### 3.2 获取群基本信息 以及成员列表
 ##### URI
 > GET  /group/{groupId}
@@ -405,9 +398,6 @@
 }
 ```
 
-
-
-
 ### 3.3 邀请新成员加入
 ##### URI
 > POST  /group-member/join
@@ -467,6 +457,27 @@
 }
 ```
 
+### 3.4 剔除成员
+##### URI
+> DELETE  /group-member/remove
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupID":"a405dffc9bcd4d76a244ddbc66810662",
+	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"
+}
+```
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}   
+```
 
 
 

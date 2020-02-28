@@ -65,10 +65,10 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 				groupMember := new(GroupMemberModel)
 				groupMember.GroupID = groupModel.ID
 				if member == userId {
-					groupMember.GroupMermerID = member
+					groupMember.GroupMemberID = member
 					groupMember.GroupMemberRole = 1 // 设置群主
 				}
-				groupMember.GroupMermerID = member
+				groupMember.GroupMemberID = member
 				groupMember.Bind()
 				err = tx.Create(groupMember).Error
 				if err != nil {
