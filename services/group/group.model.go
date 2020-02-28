@@ -28,6 +28,7 @@ type GroupModel struct {
 
 }
 
+
 // 创建群模型
 type CreateGroupModel struct {
 	// 群名称
@@ -54,33 +55,56 @@ func (g *CreateGroupModel) checkParams() error {
 
 // 群信息和成员列表
 type GroupInfoAndMembersModel struct {
-	GroupModel GroupModel
-	GroupMemberDetail *[]GroupMemberModel
+	GroupModel GroupModel  // 群基础信息
+	GroupMemberDetail *[]GroupMemberModel  // 群成员信息
 }
 
 
+var groupMemberModelService = new(GroupMemberModel)
 
-
-// 获取成员和成员基础信息
-func (g *GroupModel) GetGroupInfoAndMembers(groupID string) (*GroupInfoAndMembersModel,error) {
+/**
+    isNewGroup: true 新建   false 缓存读取
+	获取成员和成员基础信息
+	如果是新创建的群  缓存到 redis  反之从redis读取
+ */
+func (g *GroupModel) GetGroupInfoAndMembers(groupID string,isNewGroup bool) (*GroupInfoAndMembersModel,error) {
 	groupAndMemberInfo,err := func() (*GroupInfoAndMembersModel,error){
 		// 群基础信息
 		groupModel := new(GroupModel)
-		err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
-		if err !=nil {
-			return nil,err
-		}
-
-		data,err := json.Marshal(groupModel)
-		if err == nil {
-			_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+		// 如果是新建的群  缓存到redis
+		if isNewGroup {
+			err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
 			if err !=nil {
+				return nil,err
+			}
+
+			data,err := json.Marshal(groupModel)
+			if err == nil {
+				_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+				if err !=nil {
+					println(err)
+				}
+			}
+		}else{  // 从缓存读取groupInfo
+			jsonData,err := cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
+			if err != nil || jsonData == "" {
 				println(err)
+				//
+				err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
+				if err !=nil {
+					return nil,err
+				}
+			}else {
+				err := json.Unmarshal([]byte(jsonData), groupModel)
+				if err != nil {
+					fmt.Println(err)
+					return nil,err
+				}
 			}
 		}
 
 		// 群成员list
-		gmList,err := new(GroupMemberModel).GetMembersInfo(groupID)
+		gmList, _ := groupMemberModelService.GetMembersInfo(groupID,isNewGroup)
 		groupAndMemberInfo := new(GroupInfoAndMembersModel)
 		groupAndMemberInfo.GroupModel = *groupModel
 		groupAndMemberInfo.GroupMemberDetail = gmList

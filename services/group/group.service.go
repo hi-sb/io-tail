@@ -87,7 +87,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 		})
 
 		// 返回初始化后的群信息
-		return new(GroupModel).GetGroupInfoAndMembers(groupModel.ID)
+		return groupModelService.GetGroupInfoAndMembers(groupModel.ID,true)
 	}()
 	rest.WriteEntity(groupInfoAndMembers, err, response)
 }
