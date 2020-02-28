@@ -2,6 +2,7 @@ package group
 
 import (
 	"bytes"
+	"container/list"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +12,10 @@ import (
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/hi-sb/io-tail/services/user"
+	"github.com/hi-sb/io-tail/utils"
 	"strconv"
+	"strings"
 )
 
 type GroupMemberService struct {
@@ -54,15 +58,32 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 			return nil,err
 		}
 
-		// 查询当前邀请者是否已经加入 没有加入则持久化
-		err = groupMemberService.checkMemberAndJoin(joinModel.GroupID,joinModel.UserID)
-		if err != nil {
-			return nil,syserr.NewServiceError("邀请失败")
+		// 邀请的成员可能是多个
+		members := strings.Split(joinModel.UserID, ",")
+		memberList := list.New()
+		for _,m := range members{
+			// 查询当前邀请者是否已经加入 没有加入则持久化
+			err = groupMemberService.checkMemberAndJoin(joinModel.GroupID,m)
+			if err == nil {
+				memberList.PushFront(m)
+			}
 		}
+
 		//  加入成功  返回邀请者信息 被邀请者信息  当前群的基本信息 人数
 		res := new(NewMemberJoinResModel)
 		res.CurrentUser = userService.GetInfoById(userId)
-		res.InvitationUser = userService.GetInfoById(joinModel.UserID)
+
+		// 查询被邀请者
+		var invitationUsers []user.UserModel
+		for i := memberList.Front(); i != nil; i = i.Next() {
+			user := userService.GetInfoById(utils.Strval(i.Value))
+			if  user != nil {
+				user.Password = ""
+				invitationUsers = append(invitationUsers, *user)
+			}
+		}
+		res.InvitationUserArray = &invitationUsers
+
 		res.GroupInfo = groupModel
 		res.Count = this.findMemberCountByGroupID(joinModel.GroupID)
 

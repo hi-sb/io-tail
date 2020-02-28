@@ -83,7 +83,7 @@ type  NewMemberJoinResModel struct {
 	// 当前用户
 	CurrentUser *user.UserModel
 	// 被邀请者
-	InvitationUser *user.UserModel
+	InvitationUserArray *[]user.UserModel
 	// 群基础信息
 	GroupInfo *GroupModel
 	// 群人数

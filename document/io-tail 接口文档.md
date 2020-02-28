@@ -313,8 +313,8 @@
 
 ```
 {
-	"GroupID":"9dd4bc46ce7a44288587e04752a2bf68",
-	"userID":"e4bf011da16c4eed91010df048f915c2"
+	"GroupID":"a405dffc9bcd4d76a244ddbc66810662",
+	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"
 }
 ```
 ##### 响应内容
@@ -329,24 +329,30 @@
             "UpdatedAt": "0001-01-01T00:00:00Z",
             "MobileNumber": "",
             "NickName": "",
-            "Avatar": "",
-            "PrvKey": "",
-            "PubKey": ""
+            "Avatar": ""
         },
-        "InvitationUser": {
-            "ID": "e4bf011da16c4eed91010df048f915c2",
-            "CreatedAt": "2020-02-28T10:34:40.8949178+08:00",
-            "UpdatedAt": "2020-02-28T10:34:40.8949178+08:00",
-            "MobileNumber": "",
-            "NickName": "",
-            "Avatar": "",
-            "PrvKey": "",
-            "PubKey": ""
-        },
+        "InvitationUserArray": [
+            {
+                "ID": "1be2fc22d1a64e29bbcdeaf99747ba2c",
+                "CreatedAt": "2020-02-27T17:23:22.2107817+08:00",
+                "UpdatedAt": "2020-02-27T17:23:22.2107817+08:00",
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            },
+            {
+                "ID": "e4bf011da16c4eed91010df048f915c2",
+                "CreatedAt": "2020-02-28T10:34:40.8949178+08:00",
+                "UpdatedAt": "2020-02-28T10:34:40.8949178+08:00",
+                "MobileNumber": "",
+                "NickName": "",
+                "Avatar": ""
+            }
+        ],
         "GroupInfo": {
-            "ID": "9dd4bc46ce7a44288587e04752a2bf68",
-            "CreatedAt": "2020-02-28T10:57:00+08:00",
-            "UpdatedAt": "2020-02-28T10:57:00+08:00",
+            "ID": "a405dffc9bcd4d76a244ddbc66810662",
+            "CreatedAt": "2020-02-28T11:23:51+08:00",
+            "UpdatedAt": "2020-02-28T11:23:51+08:00",
             "GroupName": "群聊(4)",
             "GroupAnnouncement": "群公告",
             "GreateUserID": "aa88ac0cd9f94fc1adb6779ff3cf4cdf",
