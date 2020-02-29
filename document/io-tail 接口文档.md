@@ -590,9 +590,16 @@
 
 ### 3.8 退出群聊
 ##### URI
-> DELETE  /group-member//{groupID}/sign-ou
+> DELETE  /group-member//sign-out
 
 > 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupMemberID":"23a463f1e3f5459ea252d3817682f2d9",
+	"GroupID":"15be653fb4b64bb1941739c7b8673e5a"
+}
+```
 
 ##### 响应内容
 ```

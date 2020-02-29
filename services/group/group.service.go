@@ -151,8 +151,6 @@ func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, respon
 
 
 
-
-
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))

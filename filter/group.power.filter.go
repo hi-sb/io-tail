@@ -22,6 +22,9 @@ func groupPowerFilter(req *restful.Request, resp *restful.Response, chain *restf
 		"_group-member_remove":"/group-member/remove",
 		"_group-member_join":"/group-member/join",
 		"_group-member_admin ":"/group-member/admin",
+		"_group-member_nick-name ":"/group-member/nick-name",
+		"_group-member_forbidden ":"/group-member/forbidden",
+		"_group-member_sign-out ":"/group-member/sign-out",
 	}
 	// 当前请求的URI
 	uri := strings.Replace(fmt.Sprintf("%s", req.Request.URL),"/","_",-1)

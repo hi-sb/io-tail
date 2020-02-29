@@ -173,25 +173,42 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 // 推出群聊  普通成员不能退出群聊
 func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupID := request.PathParameter("groupID")
-		memberID := utils.Strval(request.Attribute("currentUserId"))
+		groupModelParams := new(GroupMemberModel)
+		err := request.ReadEntity(groupModelParams)
+		if err != nil {
+			return err
+		}
 		// 删除DB
-		err := mysql.DB.Where("group_id =? and group_member_id = ?",groupID,memberID).Delete(&GroupMemberModel{}).Error
+		err = mysql.DB.Where("group_id =? and group_member_id = ?",groupModelParams.GroupID, utils.Strval(request.Attribute("currentUserId"))).Delete(&GroupMemberModel{}).Error
 		if err != nil {
 			return err
 		}
 		// 删除Redis
-		cache.RedisClient.HDel(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID),memberID)
+		cache.RedisClient.HDel(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupModelParams.GroupID), utils.Strval(request.Attribute("currentUserId")))
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
 }
 
-
 // 对某个成员设置禁言
-
-
-
+func (*GroupMemberService) setForbidden(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupModelParams := new(GroupMemberModel)
+		err := request.ReadEntity(groupModelParams)
+		if err != nil {
+			return err
+		}
+		// 设置禁言
+		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("is_forbidden",groupModelParams.IsForbidden).Error
+		if err != nil {
+			return nil
+		}
+		// 刷新缓存
+		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
 
 
 
@@ -200,7 +217,8 @@ func init() {
 	webService.Route(webService.POST("/join").To(groupMemberService.newMemberJoin))
 	webService.Route(webService.DELETE("/remove").To(groupMemberService.removeMember))
 	webService.Route(webService.PUT("/admin").To(groupMemberService.setGroupAdmin))
-	webService.Route(webService.PUT("/nick-name").To(groupMemberService.setMemberNickName ))
-	webService.Route(webService.DELETE("/{groupID}/sign-out").To(groupMemberService.signOutGroupChat ))
+	webService.Route(webService.PUT("/nick-name").To(groupMemberService.setMemberNickName))
+	webService.Route(webService.DELETE("/sign-out").To(groupMemberService.signOutGroupChat))
+	webService.Route(webService.PUT("/forbidden").To(groupMemberService.setForbidden))
 	binder.BindAdd()
 }

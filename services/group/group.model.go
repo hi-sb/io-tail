@@ -118,15 +118,13 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string,isNewGroup bool) (*Gr
 func (g *GroupModel) GetGroupInfo(groupID string) (*GroupModel,error) {
 	// 群基础信息
 	groupModel := new(GroupModel)
-
 	// read redis
 	data,err :=cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
 	if err == nil && data != "" {
 		err := json.Unmarshal([]byte(data), groupModel)
 		if err != nil {
-			fmt.Println(err)
+			log.Log.Error(err)
 		}
-		return groupModel,nil
 	}
 	// read DB
 	err = mysql.DB.Where("id = ?",groupID).First(groupModel).Error

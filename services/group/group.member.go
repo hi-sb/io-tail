@@ -22,6 +22,8 @@ type GroupMemberModel struct {
 	GroupMemberNickName string `gorm:"type:varchar(255)"`
 	// 成员角色  0: 普通成员 1.群主  2。管理员
 	GroupMemberRole int `gorm:"type:int(2);not null;default:0"`
+	// 是否被禁言  0: 正常发言 1:禁言
+	IsForbidden int `gorm:"type:int(2);not null;default:0"`
 	// 手机号
 	MobileNumber string `gorm:"-"`
 	//昵称
@@ -77,11 +79,14 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 					gmd := new(GroupMemberModel)
 					err := json.Unmarshal([]byte(v), gmd)
 					if err != nil {
-						fmt.Println(err)
+						log.Log.Error(err)
 					}
 					groupMemberModels = append(groupMemberModels, *gmd)
 				}
-
+				// 如果缓存读取失败 读取DB
+				if len(groupMemberModels) == 0 {
+					return g.getGroupMemberDetailsForDB(groupID)
+				}
 				return &groupMemberModels,nil
 			}
 		}
