@@ -1,12 +1,11 @@
 package group
 
 import (
-	"errors"
 	"github.com/emicklei/go-restful"
-	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
 	"strings"
 )
@@ -27,16 +26,11 @@ var groupModelService = new(GroupModel)
 //  创建群
 func (*GroupService) createGroup(request *restful.Request, response *restful.Response) {
 	groupInfoAndMembers, err := func() (*GroupInfoAndMembersModel, error) {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil, errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 
 		// 读取参数
 		createGroup := new(CreateGroupModel)
-		err = request.ReadEntity(createGroup)
+		err := request.ReadEntity(createGroup)
 		if err != nil {
 			return nil, err
 		}

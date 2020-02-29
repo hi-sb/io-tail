@@ -3,10 +3,8 @@ package group
 import (
 	"bytes"
 	"container/list"
-	"errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
-	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
@@ -51,7 +49,7 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 
 		//  加入成功  返回邀请者信息 被邀请者信息  当前群的基本信息 人数
 		res := new(NewMemberJoinResModel)
-		res.CurrentUser = userService.GetInfoById(utils.Strval(request.Attribute("currentUserId")))
+		res.CurrentUser = userModelService.GetInfoById(utils.Strval(request.Attribute("currentUserId")))
 
 		// 查询被邀请者
 		var invitationUsers []GroupMemberModel
@@ -61,7 +59,7 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 			gmd.GroupID = joinModel.GroupID
 			gmd.GroupMemberID = utils.Strval(i.Value)
 			gmd.GroupMemberRole = 0
-			user := userService.GetInfoById(utils.Strval(i.Value))
+			user := userModelService.GetInfoById(utils.Strval(i.Value))
 			if user != nil {
 				gmd.MobileNumber = user.MobileNumber
 				gmd.Avatar = user.Avatar
@@ -89,16 +87,11 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 // 群主或者管理员  从当前群组移除成员
 func (*GroupMemberService) removeMember(request *restful.Request, response *restful.Response) {
 	err := func() error {
-		// 验证登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 
 		// 读取body
 		rmModel := new(NewMemberJoinModel)
-		err = request.ReadEntity(rmModel)
+		err := request.ReadEntity(rmModel)
 		if err != nil {
 			return  err
 		}

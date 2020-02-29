@@ -1,11 +1,9 @@
 package friend
 
 import (
-	"errors"
 	"fmt"
 	"github.com/axgle/pinyin"
 	"github.com/emicklei/go-restful"
-	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
@@ -20,7 +18,7 @@ type FriendService struct {
 
 //地址
 var friendService = new(FriendService)
-var userService = new(user.UserService)
+var userModelService = new(user.UserModel)
 
 const (
 	// 好友列表redisKey前缀
@@ -33,15 +31,10 @@ const (
 // 添加好友
 func (*FriendService) addFriend(request *restful.Request, response *restful.Response) {
 	err := func() error {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return syserr.NewParameterError("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 获取添加好友请求
 		friendModel := new(FriendModel)
-		err = request.ReadEntity(friendModel)
+		err := request.ReadEntity(friendModel)
 		if err != nil {
 			return err
 		}
@@ -81,15 +74,10 @@ func (*FriendService) addFriend(request *restful.Request, response *restful.Resp
 // 获取好友请求
 func (*FriendService) getAddFriendReqList(request *restful.Request, response *restful.Response){
 	frinedReqs, err := func() (*[]FriendAddReqModel,error) {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil,errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 获取好友请求列表
 		var friendItem []FriendModel
-		err = mysql.DB.Where("friend_id=? and is_agree=?", userId,WAITING_AGREE).Find(&friendItem).Error
+		err := mysql.DB.Where("friend_id=? and is_agree=?", userId,WAITING_AGREE).Find(&friendItem).Error
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +87,7 @@ func (*FriendService) getAddFriendReqList(request *restful.Request, response *re
 		// 循环查询好友基本信息
 		for _, friendModel := range friendItem {
 			var friendReq FriendAddReqModel
-			userInfo := userService.GetInfoById(friendModel.UserID)
+			userInfo := userModelService.GetInfoById(friendModel.UserID)
 			if userInfo != nil {
 				friendReq.FriendID = userInfo.ID
 				friendReq.Avatar = userInfo.Avatar
@@ -116,16 +104,11 @@ func (*FriendService) getAddFriendReqList(request *restful.Request, response *re
 // 更新添加好友状态（拒绝/同意）
 func (*FriendService) updateFriendIsAgree(request *restful.Request, response *restful.Response){
 	err := func()error{
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 
 		// 获取添加好友请求
 		addFReqModel := new(UpdateAddFReqModel)
-		err = request.ReadEntity(addFReqModel)
+		err := request.ReadEntity(addFReqModel)
 		if err != nil {
 			return err
 		}
@@ -167,20 +150,14 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 // 获取好友列表
 func (this *FriendService) getFriendList(request *restful.Request, response *restful.Response){
 	friendList,err := func() (*[]FriendAddReqModel,error){
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil,errors.New("您还没有登录")
-		}
-
+		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 从redis获取当前用户的好友列表
 		friendIDs, err := cache.RedisClient.SMembers(fmt.Sprintf(FRIEND_REDIS_PREFIX,userId)).Result()
 		if err != nil {
 			return nil,err
 		}
 		// 组装好友列表
-		friendInfos := userService.GetInfoByIds(&friendIDs)
+		friendInfos := userModelService.GetInfoByIds(&friendIDs)
 		var friendReqs []FriendAddReqModel // 返回当前用户的好友列表
 		for _, friend := range *friendInfos {
 			var friendReq FriendAddReqModel
@@ -222,16 +199,10 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 // 拉黑 还原 好友
 func (this *FriendService) pullBlackFriend(request *restful.Request, response *restful.Response){
 	err := func() error{
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return errors.New("您还没有登录")
-		}
-
+		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 获取对好友 黑名单操作
 		pullBlackModel := new(PullBlackModel)
-		err = request.ReadEntity(pullBlackModel)
+		err := request.ReadEntity(pullBlackModel)
 		if err != nil {
 			return err
 		}
@@ -255,20 +226,13 @@ func (this *FriendService) pullBlackFriend(request *restful.Request, response *r
 // 根据手机号搜索 未添加的好友
 func (*FriendService) serchFriendByMobilePhone(request *restful.Request, response *restful.Response){
 	friendInfo,err := func() (*FriendAddReqModel,error) {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil,errors.New("您还没有登录")
-		}
-
 		// 验证参数
 		phone := request.PathParameter("phone")
 		if !utils.VerifyMobileFormat(phone) {
 			return nil,syserr.NewParameterError("手机号格式不正确")
 		}
 
-		userModel := userService.GetInfoByPhone(phone)
+		userModel := userModelService.GetInfoByPhone(phone)
 		if userModel == nil {
 			return nil,syserr.NewServiceError("没有该用户")
 		}
@@ -287,12 +251,7 @@ func (*FriendService) serchFriendByMobilePhone(request *restful.Request, respons
 // 删除好友关系
 func (*FriendService) delFriend(request *restful.Request, response *restful.Response){
 	err := func() error {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 验证参数
 		friendId := request.PathParameter("friendId")
 		if friendId == "" {
@@ -303,7 +262,7 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 		cache.RedisClient.SRem(fmt.Sprintf(FRIEND_REDIS_PREFIX,friendId),userId)
 
 		// 删除DB
-		err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,friendId,friendId,userId).Delete(&FriendModel{}).Error
+		err := mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,friendId,friendId,userId).Delete(&FriendModel{}).Error
 		if err != nil {
 			return err
 		}
@@ -315,12 +274,7 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 // 发送消息时候验证黑名单/
 func (*FriendService) checkBlackList(request *restful.Request, response *restful.Response){
 	isSend,err := func() (bool,error) {
-		// 验证是否登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return false,errors.New("您还没有登录")
-		}
+		userId := utils.Strval(request.Attribute("currentUserId"))
 
 		// 验证参数
 		friendId := request.PathParameter("friendId")

@@ -32,7 +32,7 @@ type GroupMemberModel struct {
 	Avatar string `gorm:"-"`
 }
 
-var userService = new(user.UserService)
+var userModelService = new(user.UserModel)
 
 // 新用户加入群聊模型
 type NewMemberJoinModel struct {
@@ -129,7 +129,7 @@ func (g *GroupMemberModel) checkMemberAndJoin(groupID string, userID string) err
 			return syserr.NewServiceError("加入群聊失败")
 		}
 
-		userInfo := userService.GetInfoById(gmd.GroupMemberID)
+		userInfo := userModelService.GetInfoById(gmd.GroupMemberID)
 		if userInfo != nil {
 			gmd.MobileNumber = userInfo.MobileNumber
 			gmd.Avatar = userInfo.Avatar
@@ -154,7 +154,7 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 		}
 		var groupMemberDetails []GroupMemberModel
 		for _, memberModel := range groupMemberModels {
-			userInfo := userService.GetInfoById(memberModel.GroupMemberID)
+			userInfo := userModelService.GetInfoById(memberModel.GroupMemberID)
 			if userInfo != nil {
 				memberModel.MobileNumber = userInfo.MobileNumber
 				memberModel.Avatar = userInfo.Avatar
@@ -178,7 +178,7 @@ func (*GroupMemberModel) refushCacheGroupMemberInfo(groupID string,memberID stri
 	if err != nil {
 		log.Log.Error(err)
 	}
-	userInfo := userService.GetInfoById(memberID)
+	userInfo := userModelService.GetInfoById(memberID)
 	if userInfo != nil {
 		groupMemberModel.MobileNumber = userInfo.MobileNumber
 		groupMemberModel.Avatar = userInfo.Avatar
