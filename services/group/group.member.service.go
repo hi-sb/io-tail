@@ -25,16 +25,9 @@ var groupMemberModelService = new(GroupMemberModel)
 // 邀请新用户加入群
 func (this *GroupMemberService) newMemberJoin(request *restful.Request, response *restful.Response) {
 	memberJoinResModel, err := func() (*NewMemberJoinResModel, error) {
-		// 验证登录
-		token := request.HeaderParameter(auth.AUTH_HEADER)
-		userId, err := auth.GetUID(token)
-		if userId == "" || err != nil {
-			return nil, errors.New("您还没有登录")
-		}
-
 		// 读取body
 		joinModel := new(NewMemberJoinModel)
-		err = request.ReadEntity(joinModel)
+		err := request.ReadEntity(joinModel)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +51,7 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 
 		//  加入成功  返回邀请者信息 被邀请者信息  当前群的基本信息 人数
 		res := new(NewMemberJoinResModel)
-		res.CurrentUser = userService.GetInfoById(userId)
+		res.CurrentUser = userService.GetInfoById(utils.Strval(request.Attribute("currentUserId")))
 
 		// 查询被邀请者
 		var invitationUsers []GroupMemberModel
@@ -128,9 +121,34 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 }
 
 
-
-
 // 设置管理员
+func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupModelParams := new(GroupMemberModel)
+		err := request.ReadEntity(groupModelParams)
+		if err != nil {
+			return err
+		}
+		// 验证群主\
+		userId := utils.Strval(request.Attribute("currentUserId"))
+		old,err := groupMemberModelService.getGroupMemberByGroupIdAndMemberId(groupModelParams.GroupID,userId)
+		if err != nil {
+			return err
+		}
+		if old.GroupMemberRole != 1 {
+			return syserr.NewPermissionErr("对不起你么有权限设置管理员")
+		}
+		// 设置角色
+		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("group_member_role",groupModelParams.GroupMemberRole).Error
+		if err != nil {
+			return nil
+		}
+		// 刷新缓存
+		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
 
 // 对某个成员设置禁言
 
@@ -143,5 +161,6 @@ func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group-member")
 	webService.Route(webService.POST("/join").To(groupMemberService.newMemberJoin))
 	webService.Route(webService.DELETE("/remove").To(groupMemberService.removeMember))
+	webService.Route(webService.PUT("/admin").To(groupMemberService.setGroupAdmin))
 	binder.BindAdd()
 }

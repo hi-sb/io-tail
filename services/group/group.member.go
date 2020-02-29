@@ -6,6 +6,7 @@ import (
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/log"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/services/user"
 )
@@ -15,16 +16,12 @@ type GroupMemberModel struct {
 	db.BaseModel
 	// 群ID
 	GroupID string `gorm:"type:varchar(32);not null"`
-
 	// 成员
 	GroupMemberID string `gorm:"type:varchar(32);not null"`
-
 	// 成员在当前群的昵称
 	GroupMemberNickName string `gorm:"type:varchar(255)"`
-
 	// 成员角色  0: 普通成员 1.群主  2。管理员
 	GroupMemberRole int `gorm:"type:int(2);not null;default:0"`
-
 	// 手机号
 	MobileNumber string `gorm:"-"`
 	//昵称
@@ -169,6 +166,27 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 	return groupMemberDetails, err
 }
 
+// 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
+func (*GroupMemberModel) refushCacheGroupMemberInfo(groupID string,memberID string){
+	groupMemberModel:= new( GroupMemberModel)
+	err := mysql.DB.Where("group_id = ? and group_member_id", groupID,memberID).Find(groupMemberModel).Error
+	if err != nil {
+		log.Log.Error(err)
+	}
+	userInfo := userService.GetInfoById(memberID)
+	if userInfo != nil {
+		groupMemberModel.MobileNumber = userInfo.MobileNumber
+		groupMemberModel.Avatar = userInfo.Avatar
+		groupMemberModel.NickName = userInfo.NickName
+		data, err := json.Marshal(groupMemberModel)
+		if err == nil {
+			cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
+		}else {
+			log.Log.Error(err)
+		}
+	}
+}
+
 // 根据 userID groupID 获取 groupMemberInfo  用户群角色验证
 func (g *GroupMemberModel) getGroupMemberByGroupIdAndMemberId(groupID string,memberID string) (*GroupMemberModel, error){
 	groupMemberInfo,err := func() (*GroupMemberModel, error){
@@ -189,3 +207,5 @@ func (g *GroupMemberModel) getGroupMemberByGroupIdAndMemberId(groupID string,mem
 	}()
 	return groupMemberInfo,err
 }
+
+
