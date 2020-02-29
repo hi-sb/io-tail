@@ -6,6 +6,7 @@ import (
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/log"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"strconv"
 )
@@ -80,13 +81,12 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string,isNewGroup bool) (*Gr
 			if err == nil {
 				_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
 				if err !=nil {
-					println(err)
+					log.Log.Error(err)
 				}
 			}
 		}else{  // 从缓存读取groupInfo
 			jsonData,err := cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
 			if err != nil || jsonData == "" {
-				println(err)
 				//
 				err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
 				if err !=nil {
@@ -95,7 +95,7 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string,isNewGroup bool) (*Gr
 			}else {
 				err := json.Unmarshal([]byte(jsonData), groupModel)
 				if err != nil {
-					fmt.Println(err)
+					log.Log.Error(err)
 					return nil,err
 				}
 			}
@@ -134,4 +134,26 @@ func (g *GroupModel) GetGroupInfo(groupID string) (*GroupModel,error) {
 		return nil,err
 	}
 	return groupModel,nil
+}
+
+// 更新群基本信息缓存
+func (*GroupModel) updateGroupInfoCache(groupID string){
+	// 群基础信息
+	groupModel := new(GroupModel)
+	// read DB
+	err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
+	if err !=nil {
+		log.Log.Error(err)
+	}
+
+	data,err := json.Marshal(groupModel)
+	if err == nil {
+		_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+		if err !=nil {
+			log.Log.Error(err)
+		}
+	}
+
+
+
 }

@@ -116,12 +116,40 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 		if err != nil {
 			return err
 		}
+
+		groupModelService.updateGroupInfoCache(groupModel.ID)
+
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
 }
 
 // 群禁言设置
+func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupModel := new(GroupModel)
+		err := request.ReadEntity(groupModel)
+		if err != nil {
+			return err
+		}
+		// 验证状态有效性
+		flag := groupModel.GroupChatStatus == 1 || groupModel.GroupChatStatus == 0
+
+		if flag {
+			err = mysql.DB.Model(groupModel).UpdateColumn("group_chat_status",groupModel.GroupChatStatus).Error
+			if err != nil {
+				return err
+			}
+		} else {
+			return syserr.NewParameterError("参数有误")
+		}
+		groupModelService.updateGroupInfoCache(groupModel.ID)
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
+
+
 
 
 
@@ -130,6 +158,6 @@ func init() {
 	webService.Route(webService.POST("").To(groupService.createGroup))
 	webService.Route(webService.GET("/{groupID}").To(groupService.findOne))
 	webService.Route(webService.PUT("/global/notice").To(groupService.updateGroupNotice))
-	webService.Route(webService.PUT("/global/forbidden/words").To(groupService.findOne))
+	webService.Route(webService.PUT("/global/forbidden/words").To(groupService.updateGroupForbiddenStatus))
 	binder.BindAdd()
 }

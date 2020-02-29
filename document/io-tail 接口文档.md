@@ -324,7 +324,7 @@
 
 ### 3.2 更新群公告
 ##### URI
-> POST  /group
+> PUT /group/global/notice
 
 > 请求头 AUTH_TOKEN : TOKEN
 
@@ -335,9 +335,7 @@
 	"GroupMembers":"1111,2222,3333"   // 成员ID（当前用户除外）
 }
 ```
-> PUT /group/global/notice
 
-> 请求头 AUTH_TOKEN : TOKEN
 ```
 {
 	"ID":"be43b195a3bb4eb5abe73f246f8d9c47",
@@ -437,7 +435,7 @@
 ```
 {
 	"GroupID":"a405dffc9bcd4d76a244ddbc66810662",
-	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"
+	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"   // 多个用逗号隔开
 }
 ```
 ##### 响应内容
@@ -496,7 +494,7 @@
 ```
 {
 	"GroupID":"a405dffc9bcd4d76a244ddbc66810662",
-	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"
+	"userID":"e4bf011da16c4eed91010df048f915c2,1be2fc22d1a64e29bbcdeaf99747ba2c"   // 多个用逗号隔开
 }
 ```
 ##### 响应内容
@@ -508,6 +506,34 @@
     "Success": true
 }   
 ```
+
+
+### 3.6 更新禁言状态
+##### URI
+> PUT  /group/global/forbidden/words
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	
+    "ID":"be43b195a3bb4eb5abe73f246f8d9c47",
+    "GroupChatStatus":0   // 1：正常  0：全体禁言
+    
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
 
 
 
