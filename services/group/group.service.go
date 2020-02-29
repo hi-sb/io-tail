@@ -106,6 +106,11 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 		if err != nil {
 			return err
 		}
+
+		if !(CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+			return syserr.NewPermissionErr("对不起，您没有权限操作")
+		}
+
 		err = mysql.DB.Model(groupModel).UpdateColumn("group_announcement",groupModel.GroupAnnouncement).Error
 		if err != nil {
 			return err
@@ -126,6 +131,11 @@ func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, respon
 		if err != nil {
 			return err
 		}
+
+		if !(CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+			return syserr.NewPermissionErr("对不起，您没有权限操作")
+		}
+
 		// 验证状态有效性
 		flag := groupModel.GroupChatStatus == 1 || groupModel.GroupChatStatus == 0
 
@@ -142,8 +152,6 @@ func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, respon
 	}()
 	rest.WriteEntity(nil,err,response)
 }
-
-
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")

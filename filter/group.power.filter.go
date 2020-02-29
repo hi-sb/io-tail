@@ -21,15 +21,15 @@ func groupPowerFilter(req *restful.Request, resp *restful.Response, chain *restf
 		"_group_global_notice":"/group/global/notice",
 		"_group-member_remove":"/group-member/remove",
 		"_group-member_join":"/group-member/join",
-		"_group-member_admin ":"/group-member/admin",
-		"_group-member_nick-name ":"/group-member/nick-name",
-		"_group-member_forbidden ":"/group-member/forbidden",
-		"_group-member_sign-out ":"/group-member/sign-out",
+		"_group-member_admin":"/group-member/admin",
+		"_group-member_nick-name":"/group-member/nick-name",
+		"_group-member_forbidden":"/group-member/forbidden",
+		"_group-member_sign-out":"/group-member/sign-out",
 	}
 	// 当前请求的URI
 	uri := strings.Replace(fmt.Sprintf("%s", req.Request.URL),"/","_",-1)
 	if urlMap[uri] != "" {
-		err := checkGroupPower(req)
+		err := checkGroupPower(req,uri)
 		if err != nil {
 			rest.WriteEntity(nil,err,resp)
 			return
@@ -39,10 +39,11 @@ func groupPowerFilter(req *restful.Request, resp *restful.Response, chain *restf
 }
 
 // 验证是否是群主 或者 管理员
-func checkGroupPower(req *restful.Request) error {
+func checkGroupPower(req *restful.Request,uri string) error {
 	userId := req.Attribute(CURRENT_USER)
 	bodyBytes, _ := ioutil.ReadAll(req.Request.Body)
 	req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	// 读取参数
 	groupModel := new(group.GroupModel)
 	err := req.ReadEntity(groupModel)
@@ -52,7 +53,6 @@ func checkGroupPower(req *restful.Request) error {
 	if groupModel.ID == ""  {
 		return syserr.NewParameterError("参数缺失")
 	}
-
 	groupMemberModel := new(group.GroupMemberModel)
 	err = mysql.DB.Where("group_id = ? and group_member_id = ?",groupModel.ID,userId).Find(groupMemberModel).Error
 	if err !=nil {

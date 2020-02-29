@@ -88,7 +88,6 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 func (*GroupMemberService) removeMember(request *restful.Request, response *restful.Response) {
 	err := func() error {
 		userId := utils.Strval(request.Attribute("currentUserId"))
-
 		// 读取body
 		rmModel := new(NewMemberJoinModel)
 		err := request.ReadEntity(rmModel)
@@ -151,6 +150,9 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 		if err != nil {
 			return err
 		}
+		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+			return syserr.NewPermissionErr("对不起，您没有权限操作")
+		}
 		// 设置昵称
 		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("group_member_nick_name",groupModelParams.GroupMemberNickName).Error
 		if err != nil {
@@ -171,6 +173,11 @@ func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *
 		if err != nil {
 			return err
 		}
+
+		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+			return syserr.NewPermissionErr("对不起，您没有权限操作")
+		}
+
 		// 删除DB
 		err = mysql.DB.Where("group_id =? and group_member_id = ?",groupModelParams.GroupID, utils.Strval(request.Attribute("currentUserId"))).Delete(&GroupMemberModel{}).Error
 		if err != nil {
@@ -190,6 +197,9 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 		err := request.ReadEntity(groupModelParams)
 		if err != nil {
 			return err
+		}
+		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 		// 设置禁言
 		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("is_forbidden",groupModelParams.IsForbidden).Error
