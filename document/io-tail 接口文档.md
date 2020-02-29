@@ -322,11 +322,41 @@
 }
 ```
 
-### 3.2 获取群基本信息 以及成员列表
+### 3.2 更新群公告
 ##### URI
-> GET  /group/{groupId}
+> POST  /group
 
 > 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupName":"", // 默认名称 群聊(成员数)
+	"GroupAnnouncement": "群公告",
+	"GroupMembers":"1111,2222,3333"   // 成员ID（当前用户除外）
+}
+```
+> PUT /group/global/notice
+
+> 请求头 AUTH_TOKEN : TOKEN
+```
+{
+	"ID":"be43b195a3bb4eb5abe73f246f8d9c47",
+	"GroupAnnouncement":"测试更新群公告1333311"
+}
+```
+##### 响应内容
+```
+  {
+      "Message": "OK",
+      "Code": 200,
+      "Body": null,
+      "Success": true
+  }
+```
+
+### 3.3 获取群基本信息 以及成员列表
+##### URI
+> GET /group/{groupID}
 
 ##### 响应内容
 ```
@@ -398,7 +428,7 @@
 }
 ```
 
-### 3.3 邀请新成员加入
+### 3.4 邀请新成员加入
 ##### URI
 > POST  /group-member/join
 
@@ -457,7 +487,7 @@
 }
 ```
 
-### 3.4 剔除成员
+### 3.5 剔除成员
 ##### URI
 > DELETE  /group-member/remove
 
