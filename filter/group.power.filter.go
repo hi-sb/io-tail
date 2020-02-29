@@ -19,6 +19,9 @@ func groupPowerFilter(req *restful.Request, resp *restful.Response, chain *restf
 	urlMap := map[string]string {
 		"_group_global_forbidden_words":"/group/global/forbidden/words",
 		"_group_global_notice":"/group/global/notice",
+		"_group-member_remove":"/group-member/remove",
+		"_group-member_join":"/group-member/join",
+		"_group-member_admin ":"/group-member/admin",
 	}
 	// 当前请求的URI
 	uri := strings.Replace(fmt.Sprintf("%s", req.Request.URL),"/","_",-1)
@@ -31,9 +34,6 @@ func groupPowerFilter(req *restful.Request, resp *restful.Response, chain *restf
 	}
 	chain.ProcessFilter(req, resp)
 }
-
-
-
 
 // 验证是否是群主 或者 管理员
 func checkGroupPower(req *restful.Request) error {

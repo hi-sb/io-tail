@@ -561,6 +561,53 @@
 
 
 
+### 3.7 设置昵称
+##### URI
+> PUT  /group-member/nick-name
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupID":"15be653fb4b64bb1941739c7b8673e5a",
+	"GroupMemberID":"23a463f1e3f5459ea252d3817682f2d9",
+	"GroupMemberNickName":"测试昵称"
+	
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+
+### 3.8 退出群聊
+##### URI
+> DELETE  /group-member//{groupID}/sign-ou
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+
+
+
 
 
 

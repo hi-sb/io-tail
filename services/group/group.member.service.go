@@ -120,7 +120,6 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 	rest.WriteEntity(nil, err, response)
 }
 
-
 // 设置管理员
 func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *restful.Response){
 	err := func() error {
@@ -138,6 +137,7 @@ func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *res
 		if old.GroupMemberRole != 1 {
 			return syserr.NewPermissionErr("对不起你么有权限设置管理员")
 		}
+
 		// 设置角色
 		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("group_member_role",groupModelParams.GroupMemberRole).Error
 		if err != nil {
@@ -150,11 +150,49 @@ func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *res
 	rest.WriteEntity(nil,err,response)
 }
 
-// 对某个成员设置禁言
-
-// 设群管理员设置成员昵称
+// 群管理员设置成员昵称
+func (*GroupMemberService) setMemberNickName(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupModelParams := new(GroupMemberModel)
+		err := request.ReadEntity(groupModelParams)
+		if err != nil {
+			return err
+		}
+		// 设置昵称
+		err = mysql.DB.Model(groupModelParams).Where("group_id = ? And group_member_id = ?",groupModelParams.GroupID,groupModelParams.GroupMemberID).UpdateColumn("group_member_nick_name",groupModelParams.GroupMemberNickName).Error
+		if err != nil {
+			return nil
+		}
+		// 刷新缓存
+		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
 
 // 推出群聊  普通成员不能退出群聊
+func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *restful.Response){
+	err := func() error {
+		groupID := request.PathParameter("groupID")
+		memberID := utils.Strval(request.Attribute("currentUserId"))
+		// 删除DB
+		err := mysql.DB.Where("group_id =? and group_member_id = ?",groupID,memberID).Delete(&GroupMemberModel{}).Error
+		if err != nil {
+			return err
+		}
+		// 删除Redis
+		cache.RedisClient.HDel(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID),memberID)
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
+
+
+// 对某个成员设置禁言
+
+
+
+
 
 
 func init() {
@@ -162,5 +200,7 @@ func init() {
 	webService.Route(webService.POST("/join").To(groupMemberService.newMemberJoin))
 	webService.Route(webService.DELETE("/remove").To(groupMemberService.removeMember))
 	webService.Route(webService.PUT("/admin").To(groupMemberService.setGroupAdmin))
+	webService.Route(webService.PUT("/nick-name").To(groupMemberService.setMemberNickName ))
+	webService.Route(webService.DELETE("/{groupID}/sign-out").To(groupMemberService.signOutGroupChat ))
 	binder.BindAdd()
 }
