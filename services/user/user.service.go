@@ -103,6 +103,28 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 	rest.WriteEntity(token, err, response)
 }
 
+// 更新用户信息（昵称头像）
+func (*UserService) updateInfO(request *restful.Request, response *restful.Response){
+	err := func() error{
+		userId := utils.Strval(request.Attribute("currentUserId"))
+		userMode := new(UserModel)
+		err := request.ReadEntity(userMode)
+		if err != nil {
+			return err
+		}
+		userMode.ID = userId
+		if userMode.NickName != "" {
+			mysql.DB.Model(userMode).UpdateColumn("nick_name",userMode.NickName)
+		}
+		if userMode.Avatar != "" {
+			mysql.DB.Model(userMode).UpdateColumn("avatar",userMode.Avatar)
+		}
+
+		// 刷新缓存
+		return nil
+	}()
+	rest.WriteEntity(nil,err,response)
+}
 
 
 
@@ -110,5 +132,6 @@ func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
 	webService.Route(webService.GET("/{token}").To(userService.get))
 	webService.Route(webService.POST("/login").To(userService.regOrlogin))
+	webService.Route(webService.PUT("/update").To(userService.regOrlogin))
 	binder.BindAdd()
 }

@@ -157,25 +157,27 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 			return nil,err
 		}
 		// 组装好友列表
-		friendInfos := userModelService.GetInfoByIds(&friendIDs)
+		// friendInfos := userModelService.GetInfoByIds(&friendIDs)
 		var friendReqs []FriendAddReqModel // 返回当前用户的好友列表
-		for _, friend := range *friendInfos {
+
+		for _, id := range friendIDs {
+			user := userModelService.GetInfoById(id)
 			var friendReq FriendAddReqModel
-			friendReq.FriendID = friend.ID
-			friendReq.Avatar = friend.Avatar
-			friendReq.MobileNumber = friend.MobileNumber
-			friendReq.NickName = friend.NickName
+			friendReq.FriendID = user.ID
+			friendReq.Avatar = user.Avatar
+			friendReq.MobileNumber = user.MobileNumber
+			friendReq.NickName = user.NickName
 
 			// 查询昵称
 			friendModel := new(FriendModel)
-			err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,friend.ID,friend.ID,userId).First(friendModel).Error
+			err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,user.ID,user.ID,userId).First(friendModel).Error
 			if err != nil {
 				return nil,err
 			}
 			// 组装昵称
-			if friend.ID == friendModel.UserID {
+			if user.ID == friendModel.UserID {
 				friendReq.Remark = friendModel.FtoURemark
-			}else if friend.ID == friendModel.FriendID {
+			}else if user.ID == friendModel.FriendID {
 				friendReq.Remark = friendModel.UtoFRemark
 			}
 

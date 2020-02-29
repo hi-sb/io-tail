@@ -214,3 +214,15 @@ func (g *GroupMemberModel) getGroupMemberByGroupIdAndMemberId(groupID string,mem
 }
 
 
+// 根据memberID 查询所有的群  并刷新缓存信息
+func (g *GroupMemberModel) RefushCacheByMember(memberId string){
+	var groupMembers []GroupMemberModel
+	err := mysql.DB.Where("group_member_id = ?",memberId).Find(&groupMembers).Error
+	if err != nil {
+		log.Log.Error(err)
+		return
+	}
+	for _,gm := range groupMembers{
+		g.refushCacheGroupMemberInfo(gm.GroupID,gm.GroupMemberID)
+	}
+}

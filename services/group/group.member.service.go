@@ -213,6 +213,7 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 	rest.WriteEntity(nil,err,response)
 }
 
+//   群消息验证
 
 
 func init() {

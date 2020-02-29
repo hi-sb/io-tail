@@ -7,6 +7,8 @@ import (
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/log"
+	"github.com/hi-sb/io-tail/services/group"
 	"strings"
 )
 
@@ -97,4 +99,24 @@ func (*UserModel) GetInfoByPhone(phone string) *UserModel {
 		return nil
 	}
 	return user
+}
+
+// 修改操作后刷新用户缓存
+func (*UserModel) refushCache(ID string) {
+	user := new(UserModel)
+	err := mysql.DB.Where("id =?", ID).First(user).Error
+	if err != nil {
+		log.Log.Error(err)
+	}
+	// 缓存用户信息
+	data,err := json.Marshal(user)
+	if err == nil {
+		_,err = cache.RedisClient.HSet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,ID),data).Result()
+		if err !=nil {
+			println(err)
+		}
+	}
+
+	// 刷新group-member缓存
+	new(group.GroupMemberModel).RefushCacheByMember(ID)
 }
