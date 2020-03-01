@@ -1,6 +1,13 @@
 package model
 
-import "github.com/hi-sb/io-tail/core/db"
+import (
+	"encoding/json"
+	"github.com/hi-sb/io-tail/common/constants"
+	"github.com/hi-sb/io-tail/core/cache"
+	"github.com/hi-sb/io-tail/core/db"
+	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/syserr"
+)
 
 // 小程序模型
 type MiniModel struct {
@@ -27,4 +34,68 @@ type MiniModel struct {
 
 	// 排序
 	MiniSort int `gorm:"type:int(2);not null;default:0"`
+}
+
+
+// 参数验证
+func (*MiniModel) checkCreate(m *MiniModel) error {
+	if m.MiniAddress == "" {
+		return syserr.NewParameterError("小程序地址不能为空")
+	}
+	if m.MiniName == "" {
+		return syserr.NewParameterError("小程序名称不能为空")
+	}
+	if m.MiniLogo == "" {
+		return syserr.NewParameterError("小程序Logo不能为空")
+	}
+
+	return nil
+
+}
+
+// 持久化并加入缓存
+func (m *MiniModel) CreateAndJoinCache() error {
+	// 参数验证
+	err := m.checkCreate(m)
+	if  err != nil {
+		return err
+	}
+	m.ID = ""
+	m.Bind()
+	err = mysql.DB.Create(m).Error
+	if err != nil {
+		return err
+	}
+	// 加入缓存
+	m.saveOrUpdateCache(m)
+	return nil
+}
+
+// 创建或者更新缓存
+func (*MiniModel) saveOrUpdateCache(m *MiniModel){
+	data, err := json.Marshal(m)
+	if err == nil {
+		cache.RedisClient.HSet(constants.MINI_PROGRAM_HKEY, m.ID, data)
+	}
+}
+
+// 根据id获取MiniModel
+func (m *MiniModel) FindByMiniId(ID string) (*MiniModel,error){
+	mini := new(MiniModel)
+	jsonData,err := cache.RedisClient.HGet(constants.MINI_PROGRAM_HKEY,ID).Result()
+	if jsonData !="" && err != nil {
+		err = json.Unmarshal([]byte(jsonData), mini)
+		if err !=nil {
+			// 查询DB
+			err = mysql.DB.Model(mini).First(mini).Error
+			if err != nil {
+				return nil,err
+			}else {
+				m.saveOrUpdateCache(mini)
+			}
+		}
+		return mini,nil
+	}
+
+	return mini,nil
 }

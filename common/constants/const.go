@@ -29,12 +29,14 @@ const (
 	// 群成员
 	GROUP_MEMBER_INFO_REDIS_PREFIX = "GROUP_MEMBER_INFO_%s"
 
-
-
 	// user source
 	PRIVATE_SOURCE = "private_source"
 	// open source
 	PUBLIC_SOURCE = "public_source"
+
+
+	// 小程序缓存key
+	MINI_PROGRAM_HKEY = "MINI_PROGRAM"
 
 
 )
