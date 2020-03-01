@@ -7,6 +7,7 @@ import (
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/rest"
+	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
 	"strconv"
 	"time"
@@ -53,8 +54,8 @@ func (this *VerifyService) Verify(id, answer string, clear bool) bool {
 }
 
 func (this *VerifyService) getSmsVerify(request *restful.Request, response *restful.Response) {
-	verify, err := func() (*VerifyModel, error) {
-		smsVerify := new(SmsVerify)
+	verify, err := func() (*model.VerifyModel, error) {
+		smsVerify := new(model.SmsVerify)
 		err := request.ReadEntity(smsVerify)
 		if err != nil {
 			return nil, err
@@ -104,7 +105,7 @@ func (this *VerifyService) getSmsVerify(request *restful.Request, response *rest
 		if err != nil {
 			return nil, err
 		}
-		return &VerifyModel{Id: id, Data: base64}, nil
+		return &model.VerifyModel{Id: id, Data: base64}, nil
 	}()
 	rest.WriteEntity(verify, err, response)
 }

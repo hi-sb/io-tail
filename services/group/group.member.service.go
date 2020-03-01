@@ -5,10 +5,12 @@ import (
 	"container/list"
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
 	"strconv"
 	"strings"
@@ -18,13 +20,14 @@ type GroupMemberService struct {
 }
 
 var groupMemberService = new(GroupMemberService)
-var groupMemberModelService = new(GroupMemberModel)
+var userModelService = new(model.UserModel)
+var groupMemberModelService = new(model.GroupMemberModel)
 
 // 邀请新用户加入群
 func (this *GroupMemberService) newMemberJoin(request *restful.Request, response *restful.Response) {
-	memberJoinResModel, err := func() (*NewMemberJoinResModel, error) {
+	memberJoinResModel, err := func() (*model.NewMemberJoinResModel, error) {
 		// 读取body
-		joinModel := new(NewMemberJoinModel)
+		joinModel := new(model.NewMemberJoinModel)
 		err := request.ReadEntity(joinModel)
 		if err != nil {
 			return nil, err
@@ -41,20 +44,20 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 		memberList := list.New()
 		for _, m := range members {
 			// 查询当前邀请者是否已经加入 没有加入则持久化
-			err = groupMemberModelService.checkMemberAndJoin(joinModel.GroupID, m)
+			err = groupMemberModelService.CheckMemberAndJoin(joinModel.GroupID, m)
 			if err == nil {
 				memberList.PushFront(m)
 			}
 		}
 
 		//  加入成功  返回邀请者信息 被邀请者信息  当前群的基本信息 人数
-		res := new(NewMemberJoinResModel)
+		res := new(model.NewMemberJoinResModel)
 		res.CurrentUser = userModelService.GetInfoById(utils.Strval(request.Attribute("currentUserId")))
 
 		// 查询被邀请者
-		var invitationUsers []GroupMemberModel
+		var invitationUsers []model.GroupMemberModel
 		for i := memberList.Front(); i != nil; i = i.Next() {
-			gmd := new(GroupMemberModel)
+			gmd := new(model.GroupMemberModel)
 			gmd.ID = groupModel.ID
 			gmd.GroupID = joinModel.GroupID
 			gmd.GroupMemberID = utils.Strval(i.Value)
@@ -70,7 +73,7 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 		res.InvitationUserArray = &invitationUsers
 
 		res.GroupInfo = groupModel
-		res.Count = groupMemberModelService.findMemberCountByGroupID(joinModel.GroupID)
+		res.Count = groupMemberModelService.FindMemberCountByGroupID(joinModel.GroupID)
 
 		var buffer bytes.Buffer
 		buffer.WriteString(res.GroupInfo.GroupName)
@@ -89,14 +92,14 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 	err := func() error {
 		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 读取body
-		rmModel := new(NewMemberJoinModel)
+		rmModel := new(model.NewMemberJoinModel)
 		err := request.ReadEntity(rmModel)
 		if err != nil {
 			return  err
 		}
 
 		// 验证当前用户在当前聊天组的角色
-		currentUserGroupMember,err := groupMemberModelService.getGroupMemberByGroupIdAndMemberId(rmModel.GroupID,userId)
+		currentUserGroupMember,err := groupMemberModelService.GetGroupMemberByGroupIdAndMemberId(rmModel.GroupID,userId)
 		if err != nil {
 			return  err
 		}
@@ -105,8 +108,8 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 			return syserr.NewServiceError("你没有权限移除群成员")
 		}
 		// 删除群成员  redis db
-		cache.RedisClient.HDel(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX,rmModel.GroupID),rmModel.UserID)
-		mysql.DB.Where("group_id = ? and group_member_id = ?",rmModel.GroupID,rmModel.UserID).Delete(GroupMemberModel{})
+		cache.RedisClient.HDel(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX,rmModel.GroupID),rmModel.UserID)
+		mysql.DB.Where("group_id = ? and group_member_id = ?",rmModel.GroupID,rmModel.UserID).Delete(model.GroupMemberModel{})
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)
@@ -115,14 +118,14 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 // 设置管理员
 func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModelParams := new(GroupMemberModel)
+		groupModelParams := new(model.GroupMemberModel)
 		err := request.ReadEntity(groupModelParams)
 		if err != nil {
 			return err
 		}
 		// 验证群主\
 		userId := utils.Strval(request.Attribute("currentUserId"))
-		old,err := groupMemberModelService.getGroupMemberByGroupIdAndMemberId(groupModelParams.GroupID,userId)
+		old,err := groupMemberModelService.GetGroupMemberByGroupIdAndMemberId(groupModelParams.GroupID,userId)
 		if err != nil {
 			return err
 		}
@@ -145,12 +148,12 @@ func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *res
 // 群管理员设置成员昵称
 func (*GroupMemberService) setMemberNickName(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModelParams := new(GroupMemberModel)
+		groupModelParams := new(model.GroupMemberModel)
 		err := request.ReadEntity(groupModelParams)
 		if err != nil {
 			return err
 		}
-		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 		// 设置昵称
@@ -168,23 +171,23 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 // 推出群聊  普通成员不能退出群聊
 func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModelParams := new(GroupMemberModel)
+		groupModelParams := new(model.GroupMemberModel)
 		err := request.ReadEntity(groupModelParams)
 		if err != nil {
 			return err
 		}
 
-		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 
 		// 删除DB
-		err = mysql.DB.Where("group_id =? and group_member_id = ?",groupModelParams.GroupID, utils.Strval(request.Attribute("currentUserId"))).Delete(&GroupMemberModel{}).Error
+		err = mysql.DB.Where("group_id =? and group_member_id = ?",groupModelParams.GroupID, utils.Strval(request.Attribute("currentUserId"))).Delete(&model.GroupMemberModel{}).Error
 		if err != nil {
 			return err
 		}
 		// 删除Redis
-		cache.RedisClient.HDel(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupModelParams.GroupID), utils.Strval(request.Attribute("currentUserId")))
+		cache.RedisClient.HDel(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupModelParams.GroupID), utils.Strval(request.Attribute("currentUserId")))
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
@@ -193,12 +196,12 @@ func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *
 // 对某个成员设置禁言
 func (*GroupMemberService) setForbidden(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModelParams := new(GroupMemberModel)
+		groupModelParams := new(model.GroupMemberModel)
 		err := request.ReadEntity(groupModelParams)
 		if err != nil {
 			return err
 		}
-		if !(CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 		// 设置禁言

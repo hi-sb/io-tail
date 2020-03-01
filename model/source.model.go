@@ -1,12 +1,4 @@
-package source
-
-
-const (
-	// user source
-	privateSource = "private_source"
-	// open source
-	publicSource = "public_source"
-)
+package model
 
 //
 type OpenSource struct {

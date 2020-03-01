@@ -5,6 +5,7 @@ import (
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
 	"strings"
@@ -13,29 +14,23 @@ import (
 type GroupService struct {
 }
 
-const (
-	// 群基础信息
-	GROUP_BASE_INFO_REDIS_PREFIX = "GROUP_BASE_INFO_%s"
-	// 群成员
-	GROUP_MEMBER_INFO_REDIS_PREFIX = "GROUP_MEMBER_INFO_%s"
-)
 
 var groupService = new(GroupService)
-var groupModelService = new(GroupModel)
+var groupModelService = new(model.GroupModel)
 
 //  创建群
 func (*GroupService) createGroup(request *restful.Request, response *restful.Response) {
-	groupInfoAndMembers, err := func() (*GroupInfoAndMembersModel, error) {
+	groupInfoAndMembers, err := func() (*model.GroupInfoAndMembersModel, error) {
 		userId := utils.Strval(request.Attribute("currentUserId"))
 
 		// 读取参数
-		createGroup := new(CreateGroupModel)
+		createGroup := new(model.CreateGroupModel)
 		err := request.ReadEntity(createGroup)
 		if err != nil {
 			return nil, err
 		}
 		// 验证参数
-		err = createGroup.checkParams()
+		err = createGroup.CheckParams()
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +39,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 		创建群流程开始  1.创建主群信息  2.写入成员
 		*/
 		// 主群模型
-		groupModel := new(GroupModel)
+		groupModel := new(model.GroupModel)
 		groupModel.GreateUserID = userId
 		groupModel.GroupName = createGroup.GroupName
 		groupModel.GroupAnnouncement = createGroup.GroupAnnouncement
@@ -56,7 +51,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 			members = append(members, userId)
 			// 持久化群成员
 			for _, member := range members {
-				groupMember := new(GroupMemberModel)
+				groupMember := new(model.GroupMemberModel)
 				groupMember.GroupID = groupModel.ID
 				if member == userId {
 					groupMember.GroupMemberID = member
@@ -87,7 +82,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 
 //  获取当前群信息 以及群成员
 func (*GroupService) findOne(request *restful.Request, response *restful.Response) {
-	groupAndMemberInfo, err := func() (*GroupInfoAndMembersModel, error) {
+	groupAndMemberInfo, err := func() (*model.GroupInfoAndMembersModel, error) {
 		// 读取body
 		groupID := request.PathParameter("groupID")
 		if groupID == "" {
@@ -101,13 +96,13 @@ func (*GroupService) findOne(request *restful.Request, response *restful.Respons
 // 更新群公告
 func (*GroupService) updateGroupNotice(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModel := new(GroupModel)
+		groupModel := new(model.GroupModel)
 		err := request.ReadEntity(groupModel)
 		if err != nil {
 			return err
 		}
 
-		if !(CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 
@@ -116,7 +111,7 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 			return err
 		}
 
-		groupModelService.updateGroupInfoCache(groupModel.ID)
+		groupModelService.UpdateGroupInfoCache(groupModel.ID)
 
 		return nil
 	}()
@@ -126,13 +121,13 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 // 群禁言设置
 func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, response *restful.Response){
 	err := func() error {
-		groupModel := new(GroupModel)
+		groupModel := new(model.GroupModel)
 		err := request.ReadEntity(groupModel)
 		if err != nil {
 			return err
 		}
 
-		if !(CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModel.ID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 
@@ -147,7 +142,7 @@ func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, respon
 		} else {
 			return syserr.NewParameterError("参数有误")
 		}
-		groupModelService.updateGroupInfoCache(groupModel.ID)
+		groupModelService.UpdateGroupInfoCache(groupModel.ID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)

@@ -2,9 +2,11 @@ package source
 
 import (
 	"encoding/json"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/hi-sb/io-tail/model"
 )
 
 //
@@ -22,11 +24,11 @@ func (*PermissionService) CheckWritePermission(jwt *auth.JWT, name string) error
 	// open source and private source
 	// check fd and contain
 	//By default, all have send permission
-	source, _ := cache.RedisClient.HGet(publicSource, name).Result()
+	source, _ := cache.RedisClient.HGet(constants.PUBLIC_SOURCE, name).Result()
 	if source == "" {
 		return nil
 	}
-	sourceModel := new(OpenSource)
+	sourceModel := new(model.OpenSource)
 	// public open source check source type
 	err := json.Unmarshal([]byte(source), sourceModel)
 	if err != nil {

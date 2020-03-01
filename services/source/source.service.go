@@ -10,6 +10,7 @@ import (
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/core/topic"
+	"github.com/hi-sb/io-tail/model"
 	"net/http"
 	"os"
 	"strconv"
@@ -30,7 +31,7 @@ var (
 
 
 // 创建一个群
-func (*SourceService) CreateOpenSource(openSource *OpenSource) (bool, error) {
+func (*SourceService) CreateOpenSource(openSource *model.OpenSource) (bool, error) {
 	//todo
 	return false,nil
 }
@@ -149,7 +150,7 @@ func (sourceService *SourceService) offset(request *restful.Request, response *r
 //会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
 func (sourceService *SourceService) send(request *restful.Request, response *restful.Response) {
 	err := func() error {
-		sendRequest := new(SendRequest)
+		sendRequest := new(model.SendRequest)
 		err := request.ReadEntity(sendRequest)
 		if err != nil {
 			return syserr.NewBadRequestErr(err.Error())

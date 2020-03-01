@@ -11,7 +11,6 @@ import (
 	_ "github.com/hi-sb/io-tail/filter"
 	_ "github.com/hi-sb/io-tail/services/friend"
 	_ "github.com/hi-sb/io-tail/services/group"
-	_ "github.com/hi-sb/io-tail/services/mini"
 	_ "github.com/hi-sb/io-tail/services/sms"
 	_ "github.com/hi-sb/io-tail/services/user"
 	"net/http"

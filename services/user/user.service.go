@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/rest"
+	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -21,18 +23,12 @@ type UserService struct {
 //地址
 var userService = new(UserService)
 
-const (
-	// key
-	USER_BASE_INFO_REDIS_KEY = "USER_BASE_INFO"
-	//  field
-	USER_BASE_INFO_REDIS_PREFIX = "USER_BASE_INFO_"
-)
 
 //用token 获取用户信息
 func (*UserService) get(request *restful.Request, response *restful.Response) {
 	token := request.PathParameter("token")
 	JWT, err := auth.GetJWT(token)
-	user := new(UserModel)
+	user := new(model.UserModel)
 	if err == nil {
 		err = mysql.DB.Where("id =?", JWT.ID).First(user).Error
 	}
@@ -41,8 +37,8 @@ func (*UserService) get(request *restful.Request, response *restful.Response) {
 
 // 注册并登陆
 func (this *UserService) regOrlogin(request *restful.Request, response *restful.Response) {
-	userModel, err := func() (*UserModel, error) {
-		registerModel := new(RegisterModel)
+	userModel, err := func() (*model.UserModel, error) {
+		registerModel := new(model.RegisterModel)
 		err := request.ReadEntity(registerModel)
 		if err != nil {
 			return nil, err
@@ -56,14 +52,14 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 		if !isVerify {
 			return nil, errors.New("验证码错误")
 		}
-		userModel := new(UserModel)
+		userModel := new(model.UserModel)
 		userModel.MobileNumber = registerModel.MobileNumber
 		userModel.NickName = registerModel.MobileNumber
 		return userModel, nil
 	}()
 	if err == nil {
 		// 判断当前手机号已经持久化
-		var user UserModel
+		var user model.UserModel
 		mysql.DB.Where("mobile_number = ?", userModel.MobileNumber).First(&user)
 
 		if user.ID == "" {
@@ -84,7 +80,7 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 		// 缓存用户信息
 		data,err := json.Marshal(userModel)
 		if err == nil {
-			_,err = cache.RedisClient.HSet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,userModel.ID),data).Result()
+			_,err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX,userModel.ID),data).Result()
 			if err !=nil {
 				println(err)
 			}
@@ -107,7 +103,7 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 func (*UserService) updateInfO(request *restful.Request, response *restful.Response){
 	err := func() error{
 		userId := utils.Strval(request.Attribute("currentUserId"))
-		userMode := new(UserModel)
+		userMode := new(model.UserModel)
 		err := request.ReadEntity(userMode)
 		if err != nil {
 			return err

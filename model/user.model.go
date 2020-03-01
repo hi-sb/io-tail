@@ -1,16 +1,19 @@
-package user
+package model
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/log"
-	"github.com/hi-sb/io-tail/services/common"
 	"strings"
 )
+
+
+var groupMemberMolde = new(GroupMemberModel)
 
 // user model
 type UserModel struct {
@@ -61,12 +64,11 @@ func (this *RegisterModel) Check() error {
 	return nil
 }
 
-
 // 根据id获取用户信息
 func (*UserModel) GetInfoById(ID string)*UserModel{
 	user := new(UserModel)
 	// 从redis获取
-	result ,err := cache.RedisClient.HGet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,ID)).Result()
+	result ,err := cache.RedisClient.HGet(constants.USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX,ID)).Result()
 	if err == nil && result != "" {
 		err := json.Unmarshal([]byte(result), user)
 		if err != nil {
@@ -110,11 +112,12 @@ func (*UserModel) refushCache(ID string) {
 	// 缓存用户信息
 	data,err := json.Marshal(user)
 	if err == nil {
-		_,err = cache.RedisClient.HSet(USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(USER_BASE_INFO_REDIS_PREFIX,ID),data).Result()
+		_,err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX,ID),data).Result()
 		if err !=nil {
 			println(err)
 		}
 	}
+
 	// 刷新group-member缓存
-	// common.RefushCacheByMember(ID)
+	groupMemberMolde.RefushCacheByMember(ID)
 }

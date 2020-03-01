@@ -3,6 +3,7 @@ package sms
 import (
 	"errors"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
 	"net/http"
 	"net/url"
@@ -39,7 +40,7 @@ func (this *SmsService) Send(mobile string, content string, ip string) error {
 	//	return err
 	//}
 	//responseBody := string(byte)
-	smsLog := SmsLogModel{
+	smsLog := model.SmsLogModel{
 		IP:           ip,
 		MobileNumber: mobile,
 		Content:      content,

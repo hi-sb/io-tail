@@ -1,8 +1,9 @@
-package group
+package model
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
@@ -10,6 +11,9 @@ import (
 	"github.com/hi-sb/io-tail/core/syserr"
 	"strconv"
 )
+
+
+var groupMemberModelService = new(GroupMemberModel)
 
 // 群聊设置
 type GroupModel struct {
@@ -41,7 +45,7 @@ type CreateGroupModel struct {
 }
 
 // 验证创建群模型参数
-func (g *CreateGroupModel) checkParams() error {
+func (g *CreateGroupModel) CheckParams() error {
 
 	if len(g.GroupMembers) <= 1 {
 		return syserr.NewParameterError("参数有误，不能创建群聊")
@@ -79,13 +83,13 @@ func (g *GroupModel) GetGroupInfoAndMembers(groupID string,isNewGroup bool) (*Gr
 
 			data,err := json.Marshal(groupModel)
 			if err == nil {
-				_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+				_,err = cache.RedisClient.Set(fmt.Sprintf(constants.GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
 				if err !=nil {
 					log.Log.Error(err)
 				}
 			}
 		}else{  // 从缓存读取groupInfo
-			jsonData,err := cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
+			jsonData,err := cache.RedisClient.Get(fmt.Sprintf(constants.GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
 			if err != nil || jsonData == "" {
 				//
 				err := mysql.DB.Where("id = ?",groupID).First(groupModel).Error
@@ -119,7 +123,7 @@ func (g *GroupModel) GetGroupInfo(groupID string) (*GroupModel,error) {
 	// 群基础信息
 	groupModel := new(GroupModel)
 	// read redis
-	data,err :=cache.RedisClient.Get(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
+	data,err :=cache.RedisClient.Get(fmt.Sprintf(constants.GROUP_BASE_INFO_REDIS_PREFIX,groupID)).Result()
 	if err == nil && data != "" {
 		err := json.Unmarshal([]byte(data), groupModel)
 		if err != nil {
@@ -135,7 +139,7 @@ func (g *GroupModel) GetGroupInfo(groupID string) (*GroupModel,error) {
 }
 
 // 更新群基本信息缓存
-func (*GroupModel) updateGroupInfoCache(groupID string){
+func (*GroupModel) UpdateGroupInfoCache(groupID string){
 	// 群基础信息
 	groupModel := new(GroupModel)
 	// read DB
@@ -146,7 +150,7 @@ func (*GroupModel) updateGroupInfoCache(groupID string){
 
 	data,err := json.Marshal(groupModel)
 	if err == nil {
-		_,err = cache.RedisClient.Set(fmt.Sprintf(GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
+		_,err = cache.RedisClient.Set(fmt.Sprintf(constants.GROUP_BASE_INFO_REDIS_PREFIX,groupID),data,0).Result()
 		if err !=nil {
 			log.Log.Error(err)
 		}

@@ -1,14 +1,14 @@
-package group
+package model
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/log"
 	"github.com/hi-sb/io-tail/core/syserr"
-	"github.com/hi-sb/io-tail/services/user"
 )
 
 // 群成员
@@ -32,7 +32,7 @@ type GroupMemberModel struct {
 	Avatar string `gorm:"-"`
 }
 
-var userModelService = new(user.UserModel)
+var userModelService = new(UserModel)
 
 // 新用户加入群聊模型
 type NewMemberJoinModel struct {
@@ -43,7 +43,7 @@ type NewMemberJoinModel struct {
 // 新用户加入群聊返回模型
 type NewMemberJoinResModel struct {
 	// 当前用户
-	CurrentUser *user.UserModel
+	CurrentUser *UserModel
 	// 被邀请者
 	InvitationUserArray *[]GroupMemberModel
 	// 群基础信息
@@ -69,7 +69,7 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 			return g.getGroupMemberDetailsForDB(groupID)
 		} else {
 			// 已经创建好的群  从reids读取成员信息
-			dataMap, err := cache.RedisClient.HGetAll(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID)).Result()
+			dataMap, err := cache.RedisClient.HGetAll(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID)).Result()
 			if err != nil || dataMap == nil {
 				// 读库
 				return g.getGroupMemberDetailsForDB(groupID)
@@ -95,9 +95,9 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 }
 
 // 查询当前群的成员人数
-func (g *GroupMemberModel) findMemberCountByGroupID(groupID string) int {
+func (g *GroupMemberModel) FindMemberCountByGroupID(groupID string) int {
 	// 返回当前群的人数
-	memberArray, err := cache.RedisClient.HKeys(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID)).Result()
+	memberArray, err := cache.RedisClient.HKeys(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID)).Result()
 	if err != nil {
 		// 从DB 统计 数量
 		var total int = 0
@@ -111,11 +111,11 @@ func (g *GroupMemberModel) findMemberCountByGroupID(groupID string) int {
 }
 
 // 查询当前邀请者是否已经加入 没有加入则持久化
-func (g *GroupMemberModel) checkMemberAndJoin(groupID string, userID string) error {
+func (g *GroupMemberModel) CheckMemberAndJoin(groupID string, userID string) error {
 	err := func() error {
 		gmd := new(GroupMemberModel)
 		//  cache 如果当前用户在缓存中 证明已经在群中
-		data, err := cache.RedisClient.HGet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userID).Result()
+		data, err := cache.RedisClient.HGet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userID).Result()
 		if err == nil && data != "" {
 			return syserr.NewServiceError("当前成员已经添加")
 		}
@@ -136,7 +136,7 @@ func (g *GroupMemberModel) checkMemberAndJoin(groupID string, userID string) err
 			gmd.NickName = userInfo.NickName
 			data, err := json.Marshal(gmd)
 			if err == nil {
-				cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
+				cache.RedisClient.HSet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
 			}
 		}
 		return nil
@@ -162,7 +162,7 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 				groupMemberDetails = append(groupMemberDetails, memberModel)
 				data, err := json.Marshal(memberModel)
 				if err == nil {
-					cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
+					cache.RedisClient.HSet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
 				}
 			}
 		}
@@ -171,32 +171,11 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 	return groupMemberDetails, err
 }
 
-// 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
-func (*GroupMemberModel) RefushCacheGroupMemberInfo(groupID string,memberID string){
-	groupMemberModel:= new( GroupMemberModel)
-	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID,memberID).Find(groupMemberModel).Error
-	if err != nil {
-		log.Log.Error(err)
-	}
-	userInfo := userModelService.GetInfoById(memberID)
-	if userInfo != nil {
-		groupMemberModel.MobileNumber = userInfo.MobileNumber
-		groupMemberModel.Avatar = userInfo.Avatar
-		groupMemberModel.NickName = userInfo.NickName
-		data, err := json.Marshal(groupMemberModel)
-		if err == nil {
-			cache.RedisClient.HSet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
-		}else {
-			log.Log.Error(err)
-		}
-	}
-}
-
 // 根据 userID groupID 获取 groupMemberInfo  用户群角色验证
-func (g *GroupMemberModel) getGroupMemberByGroupIdAndMemberId(groupID string,memberID string) (*GroupMemberModel, error){
+func (g *GroupMemberModel) GetGroupMemberByGroupIdAndMemberId(groupID string,memberID string) (*GroupMemberModel, error){
 	groupMemberInfo,err := func() (*GroupMemberModel, error){
 		gmd := new(GroupMemberModel)
-		jsonData, err := cache.RedisClient.HGet(fmt.Sprintf(GROUP_MEMBER_INFO_REDIS_PREFIX,groupID),memberID).Result()
+		jsonData, err := cache.RedisClient.HGet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX,groupID),memberID).Result()
 		err = json.Unmarshal([]byte(jsonData), gmd)
 		if err != nil {
 			// 查DB
@@ -213,7 +192,6 @@ func (g *GroupMemberModel) getGroupMemberByGroupIdAndMemberId(groupID string,mem
 	return groupMemberInfo,err
 }
 
-
 // 根据memberID 查询所有的群  并刷新缓存信息
 func (g *GroupMemberModel) RefushCacheByMember(memberId string){
 	var groupMembers []GroupMemberModel
@@ -226,5 +204,44 @@ func (g *GroupMemberModel) RefushCacheByMember(memberId string){
 		g.RefushCacheGroupMemberInfo(gm.GroupID,gm.GroupMemberID)
 	}
 }
+
+// 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
+func (g *GroupMemberModel)RefushCacheGroupMemberInfo(groupID string,memberID string){
+	groupMemberModel:= new( GroupMemberModel)
+	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID,memberID).Find(groupMemberModel).Error
+	if err != nil {
+		log.Log.Error(err)
+	}
+	userInfo := userModelService.GetInfoById(memberID)
+	if userInfo != nil {
+		groupMemberModel.MobileNumber = userInfo.MobileNumber
+		groupMemberModel.Avatar = userInfo.Avatar
+		groupMemberModel.NickName = userInfo.NickName
+		data, err := json.Marshal(groupMemberModel)
+		if err == nil {
+			cache.RedisClient.HSet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
+		}else {
+			log.Log.Error(err)
+		}
+	}
+}
+
+// 验证当前用户和所在group中的角色
+func (g *GroupMemberModel) CheckGroupRole(groupID string ,userID string) bool {
+	groupMemberModel,err := g.GetGroupMemberByGroupIdAndMemberId(groupID,userID)
+	if err != nil {
+		log.Log.Error(err)
+		return false
+	}
+	if groupMemberModel.GroupMemberRole != 0 {
+		return true
+	}
+	return false
+}
+
+
+
+
+
 
 
