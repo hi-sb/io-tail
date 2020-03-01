@@ -172,7 +172,7 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 }
 
 // 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
-func (*GroupMemberModel) refushCacheGroupMemberInfo(groupID string,memberID string){
+func (*GroupMemberModel) RefushCacheGroupMemberInfo(groupID string,memberID string){
 	groupMemberModel:= new( GroupMemberModel)
 	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID,memberID).Find(groupMemberModel).Error
 	if err != nil {
@@ -223,6 +223,8 @@ func (g *GroupMemberModel) RefushCacheByMember(memberId string){
 		return
 	}
 	for _,gm := range groupMembers{
-		g.refushCacheGroupMemberInfo(gm.GroupID,gm.GroupMemberID)
+		g.RefushCacheGroupMemberInfo(gm.GroupID,gm.GroupMemberID)
 	}
 }
+
+

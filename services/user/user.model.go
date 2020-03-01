@@ -8,10 +8,9 @@ import (
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/log"
-	"github.com/hi-sb/io-tail/services/group"
+	"github.com/hi-sb/io-tail/services/common"
 	"strings"
 )
-
 
 // user model
 type UserModel struct {
@@ -116,7 +115,6 @@ func (*UserModel) refushCache(ID string) {
 			println(err)
 		}
 	}
-
 	// 刷新group-member缓存
-	new(group.GroupMemberModel).RefushCacheByMember(ID)
+	// common.RefushCacheByMember(ID)
 }

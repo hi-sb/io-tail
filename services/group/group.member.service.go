@@ -136,7 +136,7 @@ func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *res
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
@@ -159,7 +159,7 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
@@ -207,7 +207,7 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.refushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
