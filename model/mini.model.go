@@ -83,19 +83,19 @@ func (*MiniModel) saveOrUpdateCache(m *MiniModel){
 func (m *MiniModel) FindByMiniId(ID string) (*MiniModel,error){
 	mini := new(MiniModel)
 	jsonData,err := cache.RedisClient.HGet(constants.MINI_PROGRAM_HKEY,ID).Result()
-	if jsonData !="" && err != nil {
+	if jsonData !="" && err == nil {
 		err = json.Unmarshal([]byte(jsonData), mini)
-		if err !=nil {
-			// 查询DB
-			err = mysql.DB.Model(mini).First(mini).Error
-			if err != nil {
-				return nil,err
-			}else {
-				m.saveOrUpdateCache(mini)
-			}
+		return mini,nil
+	}
+	if err !=nil {
+		// 查询DB
+		err = mysql.DB.Model(mini).First(mini).Error
+		if err != nil {
+			return nil,err
+		}else {
+			m.saveOrUpdateCache(mini)
 		}
 		return mini,nil
 	}
-
 	return mini,nil
 }

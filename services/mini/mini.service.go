@@ -10,6 +10,7 @@ type MiniService struct {
 }
 
 var miniService = new(MiniService)
+var miniModelService = new(model.MiniModel)
 
 // 创建小程序
 func (*MiniService) createMini(request *restful.Request, response *restful.Response) {
@@ -29,12 +30,13 @@ func (*MiniService) createMini(request *restful.Request, response *restful.Respo
 	rest.WriteEntity(nil, err, response)
 }
 
-// 获取所有小程序
+// 根据id获取小程序基本信息
 func (*MiniService) getOne(request *restful.Request, response *restful.Response) {
-	err := func() error {
-		return nil
+	miniInfo,err := func() (*model.MiniModel,error) {
+		id := request.PathParameter("id")
+		return miniModelService.FindByMiniId(id)
 	}()
-	rest.WriteEntity(nil, err, response)
+	rest.WriteEntity(miniInfo, err, response)
 }
 
 

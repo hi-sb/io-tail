@@ -617,6 +617,67 @@
 ```
 
 
+## 四、小程序
+
+### 4.1 创建小程序（管理员）
+##### URI
+> POST  /admin/mini
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+
+```
+{
+	"MiniLogo":"MiniLogo",
+	"MiniName":"MiniName",
+	"MiniAddress":"MiniAddress",
+	"MiniDesc":"MiniDesc",
+	"MiniRemark":"MiniRemark",
+	"MiniStatus":1,
+	"MiniSort":0
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+### 4.2 获取小程序详情
+##### URI
+> GET  /admin/mini/{id}  // 管理端
+> GET /mini/{id} //前端
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "ID": "629bc3f1e6114523a178b126000fd323",
+        "CreatedAt": "2020-03-02T12:14:34.4241998+08:00",
+        "UpdatedAt": "2020-03-02T12:14:34.4241998+08:00",
+        "MiniLogo": "MiniLogo",
+        "MiniName": "MiniName",
+        "MiniAddress": "MiniAddress",
+        "MiniDesc": "MiniDesc",
+        "MiniRemark": "MiniRemark",
+        "MiniStatus": 1,
+        "MiniSort": 0
+    },
+    "Success": true
+} "Success": true
+}
+```
 
 
 
