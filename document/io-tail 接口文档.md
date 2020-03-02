@@ -649,7 +649,7 @@
 ```
 
 
-### 4.2 获取小程序详情
+### 4.2 根据ID获取小程序详情
 ##### URI
 > GET  /admin/mini/{id}  // 管理端
 > GET /mini/{id} //前端
@@ -676,6 +676,55 @@
     },
     "Success": true
 } "Success": true
+}
+```
+
+
+
+### 4.3 更新小程序（管理端）
+##### URI
+> PUT  /admin/mini 
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"MiniLogo":"MiniLogo",
+	"MiniName":"MiniName",
+	"MiniAddress":"MiniAddress",
+	"MiniDesc":"MiniDesc",
+	"MiniRemark":"MiniRemark",
+	"MiniStatus":1,
+	"MiniSort":0
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+
+### 4.4 删除小程序（管理端）
+##### URI
+> DELETE  /admin/mini/{id} 
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
 }
 ```
 

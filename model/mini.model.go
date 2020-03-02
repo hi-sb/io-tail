@@ -99,3 +99,24 @@ func (m *MiniModel) FindByMiniId(ID string) (*MiniModel,error){
 	}
 	return mini,nil
 }
+
+// 更新并刷新缓存
+func (m *MiniModel) UpdateAndJoinCache() error {
+	// 验证参数
+	err := m.checkCreate(m)
+	if err != nil {
+		return err
+	}
+	err = mysql.DB.Save(m).Error
+	if err != nil {
+		return err
+	}
+	m.saveOrUpdateCache(m)
+	return nil
+}
+
+// 从cache and db 移除
+func (*MiniModel) RemoveByMiniId(id string) error {
+	cache.RedisClient.HDel(constants.MINI_PROGRAM_HKEY, id)
+	return mysql.DB.Where("id=?",id).Delete(&MiniModel{}).Error
+}

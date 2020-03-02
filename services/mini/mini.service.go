@@ -39,6 +39,29 @@ func (*MiniService) getOne(request *restful.Request, response *restful.Response)
 	rest.WriteEntity(miniInfo, err, response)
 }
 
+// 更新小程序
+func (*MiniService) updateMini(request *restful.Request, response *restful.Response){
+	err := func() error {
+		miniModel := new(model.MiniModel)
+		err:= request.ReadEntity(miniModel)
+		if err != nil {
+			return err
+		}
+		// update and Join Cache
+		err = miniModel.UpdateAndJoinCache()
+		return err
+	}()
+	rest.WriteEntity(nil,err,response)
+}
+
+// 删除小程序
+func (*MiniService) delOne(request *restful.Request, response *restful.Response){
+	err := func() error {
+		id := request.PathParameter("id")
+		return miniModelService.RemoveByMiniId(id)
+	}()
+	rest.WriteEntity(nil,err,response)
+}
 
 func init(){
 	binder, webService := rest.NewJsonWebServiceBinder("/mini")
@@ -48,6 +71,8 @@ func init(){
 	binderAdmin, webServiceAdmin := rest.NewJsonWebServiceBinder("/admin/mini")
 	webServiceAdmin.Route(webServiceAdmin.POST("").To(miniService.createMini))
 	webServiceAdmin.Route(webServiceAdmin.GET("{id}").To(miniService.getOne))
+	webServiceAdmin.Route(webServiceAdmin.PUT("").To(miniService.updateMini))
+	webServiceAdmin.Route(webServiceAdmin.DELETE("{id}").To(miniService.delOne))
 	binderAdmin.BindAdd()
 
 }
