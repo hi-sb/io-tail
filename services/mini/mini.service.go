@@ -2,6 +2,7 @@ package mini
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/hi-sb/io-tail/core/base"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/model"
 )
@@ -63,6 +64,20 @@ func (*MiniService) delOne(request *restful.Request, response *restful.Response)
 	rest.WriteEntity(nil,err,response)
 }
 
+// 条件分页查询
+func (*MiniService) page(request *restful.Request, response *restful.Response){
+	page, err := func() (*base.Pager, error) {
+		var page base.Pager
+		err := request.ReadEntity(&page)
+		if err != nil {
+			return nil, nil
+		}
+		return miniModelService.FindOptionsPage(page)
+	}()
+	rest.WriteEntity(page,err,response)
+}
+
+
 func init(){
 	binder, webService := rest.NewJsonWebServiceBinder("/mini")
 	webService.Route(webService.GET("{id}").To(miniService.getOne))
@@ -73,6 +88,7 @@ func init(){
 	webServiceAdmin.Route(webServiceAdmin.GET("{id}").To(miniService.getOne))
 	webServiceAdmin.Route(webServiceAdmin.PUT("").To(miniService.updateMini))
 	webServiceAdmin.Route(webServiceAdmin.DELETE("{id}").To(miniService.delOne))
+	webServiceAdmin.Route(webServiceAdmin.POST("/page").To(miniService.page))
 	binderAdmin.BindAdd()
 
 }

@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"github.com/hi-sb/io-tail/common/constants"
+	"github.com/hi-sb/io-tail/core/base"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
@@ -119,4 +120,26 @@ func (m *MiniModel) UpdateAndJoinCache() error {
 func (*MiniModel) RemoveByMiniId(id string) error {
 	cache.RedisClient.HDel(constants.MINI_PROGRAM_HKEY, id)
 	return mysql.DB.Where("id=?",id).Delete(&MiniModel{}).Error
+}
+
+// 分页查询 and 条件查询
+
+func (*MiniModel) FindOptionsPage(page base.Pager) (*base.Pager, error) {
+	var miniArray []MiniModel
+
+	// 查询
+	err := mysql.DB.
+		Limit(page.GetLimit()).
+		Offset(page.GetOffset()).
+		Order("created_at desc").
+		Order("mini_sort desc").
+		Find(&miniArray).Error
+	var total int64 = 0
+	err = mysql.DB.Model(&MiniModel{}).Count(&total).Error
+	if err != nil {
+		return nil, err
+	}
+	page.Total = total
+	page.Body = miniArray
+	return &page, nil
 }
