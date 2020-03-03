@@ -49,9 +49,7 @@ func (*MiniModel) checkCreate(m *MiniModel) error {
 	if m.MiniLogo == "" {
 		return syserr.NewParameterError("小程序Logo不能为空")
 	}
-
 	return nil
-
 }
 
 // 持久化并加入缓存

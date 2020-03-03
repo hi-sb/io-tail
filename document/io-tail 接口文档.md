@@ -732,6 +732,79 @@
 
 
 
+### 4.5 分页查询小程序列表
+##### URI
+> POST  /admin/mini/page
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"Page": 1,
+	"PageSize": 10,
+	 "Body": {
+	 	
+	 }
+}
+```
+
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "Page": 1,
+        "PageSize": 10,
+        "Total": 3,
+        "Body": [
+            {
+                "ID": "7ccdd265b8e5441ebb5d732f7ec8263e",
+                "CreatedAt": "2020-03-02T13:00:11+08:00",
+                "UpdatedAt": "2020-03-02T13:00:30+08:00",
+                "MiniLogo": "MiniLogo",
+                "MiniName": "MiniName",
+                "MiniAddress": "MiniAddress_TEST",
+                "MiniDesc": "MiniDesc",
+                "MiniRemark": "MiniRemark_TEST",
+                "MiniStatus": 1,
+                "MiniSort": 12
+            },
+            {
+                "ID": "1e81f3b297f8432db5ba0c8c74a6f8f9",
+                "CreatedAt": "2020-03-02T13:00:10+08:00",
+                "UpdatedAt": "2020-03-02T13:00:57+08:00",
+                "MiniLogo": "MiniL11ogo",
+                "MiniName": "MiniNam1e",
+                "MiniAddress": "MiniAddress",
+                "MiniDesc": "MiniDesc111",
+                "MiniRemark": "MiniRemark",
+                "MiniStatus": 1,
+                "MiniSort": 12
+            },
+            {
+                "ID": "3da176a34e7742a8b114438a7ad9b2d2",
+                "CreatedAt": "2020-03-02T13:00:09+08:00",
+                "UpdatedAt": "2020-03-02T13:00:09+08:00",
+                "MiniLogo": "MiniLogo",
+                "MiniName": "MiniName",
+                "MiniAddress": "MiniAddress",
+                "MiniDesc": "MiniDesc",
+                "MiniRemark": "MiniRemark",
+                "MiniStatus": 1,
+                "MiniSort": 0
+            }
+        ]
+    },
+    "Success": true
+}
+```
+
+
+
+
+
 
 
 
