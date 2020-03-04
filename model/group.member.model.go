@@ -250,7 +250,7 @@ func (*GroupMemberModel) FindByNickName(f *FindByNickNameModel) (*GroupMemberMod
 	groupMemberInfo, err := func() (*GroupMemberModel, error) {
 		gmd := new(GroupMemberModel)
 		// 查DB
-		err := mysql.DB.Where("group_id = ? and group_member_nick_name = ?", f.GroupId, f.NickName).Find(gmd).Error
+		err := mysql.DB.Where("group_id = ? and group_member_nick_name like  ?", f.GroupId, "%"+f.NickName+"%").Find(gmd).Error
 		if err != nil {
 			return nil, err
 		} else {
