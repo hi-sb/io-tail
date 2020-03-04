@@ -216,6 +216,21 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 	rest.WriteEntity(nil,err,response)
 }
 
+
+// 根据昵称搜索群成员
+func (*GroupMemberService) findByNickName(request *restful.Request, response *restful.Response){
+	groupMember,err := func() (*model.GroupMemberModel, error) {
+		findNickNameModel := new(model.FindByNickNameModel)
+		err := request.ReadEntity(findNickNameModel)
+		if err != nil {
+			return nil,err
+		}
+		return groupMemberModelService.FindByNickName(findNickNameModel)
+	}()
+	rest.WriteEntity(groupMember,err,response)
+}
+
+
 //   群消息验证
 
 
@@ -227,5 +242,6 @@ func init() {
 	webService.Route(webService.PUT("/nick-name").To(groupMemberService.setMemberNickName))
 	webService.Route(webService.DELETE("/sign-out").To(groupMemberService.signOutGroupChat))
 	webService.Route(webService.PUT("/forbidden").To(groupMemberService.setForbidden))
+	webService.Route(webService.POST("/nick-name").To(groupMemberService.findByNickName))
 	binder.BindAdd()
 }

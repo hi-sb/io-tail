@@ -52,6 +52,12 @@ type NewMemberJoinResModel struct {
 	Count int
 }
 
+// 根据昵称搜索请求模型
+type FindByNickNameModel struct {
+	GroupId  string
+	NickName string
+}
+
 // 持久化群成员到DB
 func (*GroupMemberModel) insertMembers(model *GroupMemberModel) error {
 	err := mysql.DB.Create(model).Error
@@ -73,7 +79,7 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 			if err != nil || dataMap == nil {
 				// 读库
 				return g.getGroupMemberDetailsForDB(groupID)
-			}else {
+			} else {
 				var groupMemberModels []GroupMemberModel
 				for _, v := range dataMap {
 					gmd := new(GroupMemberModel)
@@ -87,7 +93,7 @@ func (g *GroupMemberModel) GetMembersInfo(groupID string, isNewGroup bool) (*[]G
 				if len(groupMemberModels) == 0 {
 					return g.getGroupMemberDetailsForDB(groupID)
 				}
-				return &groupMemberModels,nil
+				return &groupMemberModels, nil
 			}
 		}
 	}()
@@ -172,43 +178,43 @@ func (g *GroupMemberModel) getGroupMemberDetailsForDB(groupID string) (*[]GroupM
 }
 
 // 根据 userID groupID 获取 groupMemberInfo  用户群角色验证
-func (g *GroupMemberModel) GetGroupMemberByGroupIdAndMemberId(groupID string,memberID string) (*GroupMemberModel, error){
-	groupMemberInfo,err := func() (*GroupMemberModel, error){
+func (g *GroupMemberModel) GetGroupMemberByGroupIdAndMemberId(groupID string, memberID string) (*GroupMemberModel, error) {
+	groupMemberInfo, err := func() (*GroupMemberModel, error) {
 		gmd := new(GroupMemberModel)
-		jsonData, err := cache.RedisClient.HGet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX,groupID),memberID).Result()
+		jsonData, err := cache.RedisClient.HGet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), memberID).Result()
 		err = json.Unmarshal([]byte(jsonData), gmd)
 		if err != nil {
 			// 查DB
-			err = mysql.DB.Where("group_id = ? and group_member_id = ?",groupID,memberID).Find(gmd).Error
+			err = mysql.DB.Where("group_id = ? and group_member_id = ?", groupID, memberID).Find(gmd).Error
 			if err != nil {
-				return nil,err
-			}else {
-				return gmd,nil
+				return nil, err
+			} else {
+				return gmd, nil
 			}
-		}else{
-			return gmd,nil
+		} else {
+			return gmd, nil
 		}
 	}()
-	return groupMemberInfo,err
+	return groupMemberInfo, err
 }
 
 // 根据memberID 查询所有的群  并刷新缓存信息
-func (g *GroupMemberModel) RefushCacheByMember(memberId string){
+func (g *GroupMemberModel) RefushCacheByMember(memberId string) {
 	var groupMembers []GroupMemberModel
-	err := mysql.DB.Where("group_member_id = ?",memberId).Find(&groupMembers).Error
+	err := mysql.DB.Where("group_member_id = ?", memberId).Find(&groupMembers).Error
 	if err != nil {
 		log.Log.Error(err)
 		return
 	}
-	for _,gm := range groupMembers{
-		g.RefushCacheGroupMemberInfo(gm.GroupID,gm.GroupMemberID)
+	for _, gm := range groupMembers {
+		g.RefushCacheGroupMemberInfo(gm.GroupID, gm.GroupMemberID)
 	}
 }
 
 // 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
-func (g *GroupMemberModel)RefushCacheGroupMemberInfo(groupID string,memberID string){
-	groupMemberModel:= new( GroupMemberModel)
-	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID,memberID).Find(groupMemberModel).Error
+func (g *GroupMemberModel) RefushCacheGroupMemberInfo(groupID string, memberID string) {
+	groupMemberModel := new(GroupMemberModel)
+	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID, memberID).Find(groupMemberModel).Error
 	if err != nil {
 		log.Log.Error(err)
 	}
@@ -220,15 +226,15 @@ func (g *GroupMemberModel)RefushCacheGroupMemberInfo(groupID string,memberID str
 		data, err := json.Marshal(groupMemberModel)
 		if err == nil {
 			cache.RedisClient.HSet(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupID), userInfo.ID, data)
-		}else {
+		} else {
 			log.Log.Error(err)
 		}
 	}
 }
 
 // 验证当前用户和所在group中的角色
-func (g *GroupMemberModel) CheckGroupRole(groupID string ,userID string) bool {
-	groupMemberModel,err := g.GetGroupMemberByGroupIdAndMemberId(groupID,userID)
+func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string) bool {
+	groupMemberModel, err := g.GetGroupMemberByGroupIdAndMemberId(groupID, userID)
 	if err != nil {
 		log.Log.Error(err)
 		return false
@@ -239,9 +245,17 @@ func (g *GroupMemberModel) CheckGroupRole(groupID string ,userID string) bool {
 	return false
 }
 
-
-
-
-
-
-
+// 根据昵称搜索
+func (*GroupMemberModel) FindByNickName(f *FindByNickNameModel) (*GroupMemberModel, error) {
+	groupMemberInfo, err := func() (*GroupMemberModel, error) {
+		gmd := new(GroupMemberModel)
+		// 查DB
+		err := mysql.DB.Where("group_id = ? and group_member_nick_name = ?", f.GroupId, f.NickName).Find(gmd).Error
+		if err != nil {
+			return nil, err
+		} else {
+			return gmd, nil
+		}
+	}()
+	return groupMemberInfo, err
+}

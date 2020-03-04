@@ -278,6 +278,7 @@
 
 
 ## 三、群组业务
+
 ### 3.1 创建群
 ##### URI
 > POST  /group
@@ -566,7 +567,7 @@
 
 
 
-### 3.7 设置昵称
+### 3.8 设置昵称
 ##### URI
 > PUT  /group-member/nick-name
 
@@ -593,7 +594,7 @@
 
 
 
-### 3.8 退出群聊
+### 3.9 退出群聊
 ##### URI
 > DELETE  /group-member//sign-out
 
@@ -615,6 +616,43 @@
     "Success": true
 }
 ```
+
+### 3.10 根据群昵称查询成员信息
+##### URI
+> POST  /group-member/nick-name
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+```
+{
+	"GroupId":"e781e6e03fd64e84897295eed219d619",
+	"NickName":"阿迪斯"
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "ID": "c705e28ad46d4aa1bddf3aaf0de9004f",
+        "CreatedAt": "2020-02-28T17:20:29+08:00",
+        "UpdatedAt": "2020-02-28T17:20:29+08:00",
+        "GroupID": "e781e6e03fd64e84897295eed219d619",
+        "GroupMemberID": "e52781a030724f9080e88f0847caf400",
+        "GroupMemberNickName": "阿迪斯",
+        "GroupMemberRole": 1,
+        "IsForbidden": 0,
+        "MobileNumber": "",
+        "NickName": "",
+        "Avatar": ""
+    },
+    "Success": true
+}
+```
+
+
 
 
 ## 四、小程序
