@@ -160,3 +160,21 @@ func (*GroupModel) UpdateGroupInfoCache(groupID string){
 
 }
 
+
+// 验证群组的生命状态 是否解散 false 当前群不可用 反之正常
+func (g *GroupModel) CheckGroupLife(groupId string) bool {
+	// 验证当前群的生命状态
+	groupInfo, err := g.GetGroupInfo(groupId)
+	if err != nil {
+		return false
+	}
+	if  groupInfo == nil {
+		return false
+	}
+	// 验证当前群的会话状态
+	if groupInfo.GroupChatStatus == 0 {
+		return false
+	}
+	return true
+}
+
