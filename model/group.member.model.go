@@ -9,6 +9,7 @@ import (
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/log"
 	"github.com/hi-sb/io-tail/core/syserr"
+	"github.com/jinzhu/gorm"
 )
 
 // 群成员
@@ -233,7 +234,7 @@ func (g *GroupMemberModel) RefreshCacheGroupMemberInfo(groupID string, memberID 
 }
 
 // 验证当前用户和所在group中的角色,验证是否是群主
-func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string,isGroupMain bool) bool {
+func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string, isGroupMain bool) bool {
 	groupMemberModel, err := g.GetGroupMemberByGroupIdAndMemberId(groupID, userID)
 	if err != nil {
 		log.Log.Error(err)
@@ -243,7 +244,7 @@ func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string,isGroupM
 		if groupMemberModel.GroupMemberRole != 0 {
 			return true
 		}
-	}else {
+	} else {
 		if groupMemberModel.GroupMemberRole == 1 {
 			return true
 		}
@@ -267,6 +268,34 @@ func (*GroupMemberModel) FindByNickName(f *FindByNickNameModel) (*GroupMemberMod
 }
 
 // 解散群 删除群成员 清除缓存
-func (*GroupMemberModel) DissolutionGroupAndClearCache(){
+func (*GroupMemberModel) DissolutionGroupAndClearCache(groupId string) error {
+	err := func() error {
+		// 清除当前群的成员缓存
+		_, err := cache.RedisClient.Del(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX, groupId)).Result()
+		if err != nil {
+			return err
+		}
+		// 清除当前群的信息
+		_, err = cache.RedisClient.Del(fmt.Sprintf(constants.GROUP_BASE_INFO_REDIS_PREFIX, groupId)).Result()
+		if err != nil {
+			return err
+		}
 
+		// 从db删除 事务处理
+		err = mysql.Transactional(func(tx *gorm.DB) error {
+			// 删除群成员
+			err = tx.Where("group_id = ? ", groupId).Delete(&GroupMemberModel{}).Error
+			if err != nil {
+				return err
+			}
+			// 删除群
+			err = tx.Where("id = ? ", groupId).Delete(&GroupModel{}).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return err
+	}()
+	return err
 }

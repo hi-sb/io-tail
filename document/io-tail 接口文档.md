@@ -654,6 +654,27 @@
 
 
 
+### 3.11 群主解散群
+##### URI
+> DELETE  /group/{groupID}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+
+
+
+
 
 ## 四、小程序
 

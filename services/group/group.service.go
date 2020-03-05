@@ -19,6 +19,7 @@ var groupService = new(GroupService)
 var groupModelService = new(model.GroupModel)
 
 
+
 //  创建群
 func (*GroupService) createGroup(request *restful.Request, response *restful.Response) {
 	groupInfoAndMembers, err := func() (*model.GroupInfoAndMembersModel, error) {
@@ -150,7 +151,7 @@ func (*GroupService) updateGroupForbiddenStatus(request *restful.Request, respon
 }
 
 
-// 解散群
+// 解散群 并删除群成员
 func (*GroupService) delGroupById(request *restful.Request, response *restful.Response){
 	err := func() error {
 		groupId := request.PathParameter("groupID")
@@ -165,11 +166,7 @@ func (*GroupService) delGroupById(request *restful.Request, response *restful.Re
 		/**
 		  解散群成员 删除群信息  清除缓存
 		 */
-
-		//groupMemberModelService.GetGroupMemberByGroupIdAndMemberId()
-
-
-		return nil
+		return groupMemberModelService.DissolutionGroupAndClearCache(groupId)
 	}()
 	rest.WriteEntity(nil,err,response)
 }
