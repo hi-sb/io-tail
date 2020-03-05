@@ -273,7 +273,6 @@ func (*FriendService) delFriend(request *restful.Request, response *restful.Resp
 func (*FriendService) checkBlackList(request *restful.Request, response *restful.Response){
 	isSend,err := func() (bool,error) {
 		userId := utils.Strval(request.Attribute("currentUserId"))
-
 		// 验证参数
 		friendId := request.PathParameter("friendId")
 		if friendId == "" {

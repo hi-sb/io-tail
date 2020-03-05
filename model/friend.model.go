@@ -5,6 +5,8 @@ import (
 	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
+	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/log"
 	"github.com/hi-sb/io-tail/core/syserr"
 )
 
@@ -140,3 +142,46 @@ func (*FriendAddReqModel) CheckAscII(ascValue int) int{
 	}
 }
 
+// 验证好友关系  true 是好友  false: 非好友
+func (*FriendModel) CheckRelationship(userId string,friendId string) bool {
+	friendInfo := new(FriendModel)
+	err := mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
+	if err != nil || friendInfo == nil {
+		log.Log.Error(err)
+		return false
+	}
+	if friendInfo.IsAgree == constants.AGREE_ADD {
+		return true
+	}
+	return false
+}
+
+// 验证黑名单 true 非黑名单  false: 不是黑名单
+func (*FriendModel) CheckFriendBlack(userId string,friendId string) bool {
+	friendInfo := new(FriendModel)
+	err := mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
+	if err != nil || friendInfo == nil {
+		log.Log.Error(err)
+		return false
+	}
+
+	if friendInfo.UserID == userId {
+		if friendInfo.IsBlack == constants.IS_BLACK_F_PULL_U {
+			return false
+		}
+		if friendInfo.IsBlack == constants.IS_BLACK_EACH_OTHER {
+			return false
+		}
+	}
+
+
+	if friendInfo.UserID == friendId {
+		if friendInfo.IsBlack == constants.IS_BLACK_U_PULL_F {
+			return false
+		}
+		if friendInfo.IsBlack == constants.IS_BLACK_EACH_OTHER {
+			return false
+		}
+	}
+	return true
+}

@@ -9,8 +9,8 @@ const (
 
 
 	IS_NOT_BLACK string = "11"  // 正常
-	IS_BLACK_F_PULL_U string = "10"  // u 拉黑 f
-	IS_BLACK_U_PULL_F string = "01"  // f 拉黑 u
+	IS_BLACK_F_PULL_U string = "10"  // f 拉黑 u
+	IS_BLACK_U_PULL_F string = "01"  // u 拉黑 f
 	IS_BLACK_EACH_OTHER string = "00" // 互相拉黑
 
 	AGREE_ADD int = 11   // 互为好友
