@@ -169,7 +169,7 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 		if err != nil {
 			return err
 		}
-		return sourceService.sendMessage(source, sendRequest, JWT.ID)
+		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
 	rest.WriteEntity(nil, err, response)
 }
@@ -194,13 +194,13 @@ func (sourceService *SourceService) groupSend(request *restful.Request, response
 		if err != nil {
 			return err
 		}
-		return sourceService.sendMessage(source, sendRequest, JWT.ID)
+		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
 	rest.WriteEntity(nil, err, response)
 }
 
-func (sourceService *SourceService) sendMessage(openId string, sendRequest *model.SendRequest, fromId string) error {
-	path, err := filePathAdapter.Handle(openId)
+func (sourceService *SourceService) SendMessage(fromId string, toId string, sendRequest *model.SendRequest) error {
+	path, err := filePathAdapter.Handle(toId)
 	if err != nil {
 		err = syserr.NewSysErr(err.Error())
 		fmt.Println(err)
