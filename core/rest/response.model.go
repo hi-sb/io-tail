@@ -30,3 +30,19 @@ func WriteEntity(obj interface{}, err error, response *restful.Response) {
 	}
 	_ = response.WriteEntity(responseModel)
 }
+
+
+// 特殊需要
+func WriteErrAndEntity(obj interface{}, err error, response *restful.Response) {
+	responseModel := ResponseModel{Message: "OK", Code: 200, Success: true, Body: obj}
+	if err != nil {
+		responseModel.Message = err.Error()
+		// is base err
+		if baseErr, ok := err.(syserr.BaseErrorInterface); ok {
+			responseModel.Code = baseErr.Code()
+		}
+		_ = response.WriteHeaderAndEntity(500, responseModel)
+		return
+	}
+	_ = response.WriteEntity(responseModel)
+}

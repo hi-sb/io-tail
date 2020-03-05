@@ -671,6 +671,23 @@
 ```
 
 
+### 3.12 群消息验证 是否可以发消息
+##### URI
+> DELETE  /group//check/{groupID}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "对不起,当前群已经被解散",
+    "Code": 1091,
+    "Body": false,  // false 不能发消息  true 正常群聊天
+    "Success": true
+}
+```
+
+
 
 
 

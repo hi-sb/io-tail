@@ -168,7 +168,7 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 	rest.WriteEntity(nil,err,response)
 }
 
-// 推出群聊  普通成员不能退出群聊
+// 退出群聊  普通成员不能退出群聊
 func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *restful.Response){
 	err := func() error {
 		groupModelParams := new(model.GroupMemberModel)
@@ -231,7 +231,6 @@ func (*GroupMemberService) findByNickName(request *restful.Request, response *re
 }
 
 
-//   群消息验证
 
 
 func init() {
