@@ -54,8 +54,14 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 		if err != nil {
 			return "", "", syserr.NewBadRequestErr("错误的参数 offset")
 		}
+		path, err := filePathAdapter.Handle(source)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return "", "", err
+		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -83,7 +89,13 @@ func (sourceService *SourceService) publicSourceListen(request *restful.Request,
 			return "", "", syserr.NewBadRequestErr("错误的offset参数")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		path, err := filePathAdapter.Handle(source)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return "", "", err
+		}
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -157,7 +169,7 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 		if err != nil {
 			return err
 		}
-		return sourceService.sendMessage(request.Request.RequestURI, sendRequest, JWT.ID)
+		return sourceService.sendMessage(source, sendRequest, JWT.ID)
 	}()
 	rest.WriteEntity(nil, err, response)
 }
@@ -182,13 +194,13 @@ func (sourceService *SourceService) groupSend(request *restful.Request, response
 		if err != nil {
 			return err
 		}
-		return sourceService.sendMessage(request.Request.RequestURI, sendRequest, JWT.ID)
+		return sourceService.sendMessage(source, sendRequest, JWT.ID)
 	}()
 	rest.WriteEntity(nil, err, response)
 }
 
-func (sourceService *SourceService) sendMessage(uri string, sendRequest *model.SendRequest, fromId string) error {
-	path, err := filePathAdapter.Handle(uri)
+func (sourceService *SourceService) sendMessage(openId string, sendRequest *model.SendRequest, fromId string) error {
+	path, err := filePathAdapter.Handle(openId)
 	if err != nil {
 		err = syserr.NewSysErr(err.Error())
 		fmt.Println(err)

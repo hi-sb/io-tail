@@ -36,15 +36,15 @@ func NewDefaultFilePathAdapter() FilePathAdapter {
 }
 
 // source path  to sys path
-func (defaultFilePathAdapter *DefaultFilePathAdapter) Handle(uri string) (string, error) {
-	if uri == "" || uri == "/" {
-		return "", errors.New("path is null")
+func (defaultFilePathAdapter *DefaultFilePathAdapter) Handle(openId string) (string, error) {
+	if openId == "" {
+		return "", errors.New("open id  is null")
 	}
-	return defaultFilePathAdapter.hashPath(uri)
+	return defaultFilePathAdapter.hashPath(openId)
 }
 
-func (*DefaultFilePathAdapter) hashPath(uri string) (string, error) {
-	md5 := utils.Md5V2(uri)
+func (*DefaultFilePathAdapter) hashPath(openId string) (string, error) {
+	md5 := utils.Md5V2(openId)
 	return config.DataPath + "/" + md5[0:1] + "/" + md5[2:3] + "/" + md5[4:5] + "/" + md5[6:7] + "/" + md5, nil
 }
 
