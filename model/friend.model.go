@@ -144,8 +144,19 @@ func (*FriendAddReqModel) CheckAscII(ascValue int) int{
 
 // 验证好友关系  true 是好友  false: 非好友
 func (*FriendModel) CheckRelationship(userId string,friendId string) bool {
+	// 从cache中读取
+	// 验证 friendId的好友列表中是否有userID
+	isFriend,err := cache.RedisClient.SIsMember(fmt.Sprintf(constants.FRIEND_REDIS_PREFIX,friendId),userId).Result()
+	if err == nil {
+		if isFriend {
+			return true
+		}else {
+			return false
+		}
+	}
+	// 缓存读取失败 从DB验证
 	friendInfo := new(FriendModel)
-	err := mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
+	err = mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
 	if err != nil || friendInfo == nil {
 		log.Log.Error(err)
 		return false
@@ -156,32 +167,43 @@ func (*FriendModel) CheckRelationship(userId string,friendId string) bool {
 	return false
 }
 
-// 验证黑名单 true 非黑名单  false: 不是黑名单
+// 验证黑名单 true 是黑名单  false: 非黑名单
 func (*FriendModel) CheckFriendBlack(userId string,friendId string) bool {
+
+	// 从缓存中读取
+	// userID 发送消息给 friendId  验证 friendId的黑名单中是否有userId
+	isMember,err := cache.RedisClient.SIsMember(fmt.Sprintf(constants.FRIEND_BLACK_REDIS_PREFIX,friendId),userId).Result()
+	if err == nil {
+		return isMember
+	}
+
 	friendInfo := new(FriendModel)
-	err := mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
+	err = mysql.DB.Where("(user_id =? and friend_id = ?) or (friend_id =? and user_id = ?)",userId,friendId,friendId,userId).Find(friendInfo).Error
 	if err != nil || friendInfo == nil {
 		log.Log.Error(err)
-		return false
+		return true
 	}
 
+	// userid --> userid    f 拉黑 u
 	if friendInfo.UserID == userId {
 		if friendInfo.IsBlack == constants.IS_BLACK_F_PULL_U {
-			return false
+			return true
 		}
 		if friendInfo.IsBlack == constants.IS_BLACK_EACH_OTHER {
-			return false
+			return true
 		}
 	}
 
-
+	// userid ---> friendId    u 拉黑 f
 	if friendInfo.UserID == friendId {
 		if friendInfo.IsBlack == constants.IS_BLACK_U_PULL_F {
-			return false
+			return true
 		}
 		if friendInfo.IsBlack == constants.IS_BLACK_EACH_OTHER {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
+
+
