@@ -182,7 +182,66 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 		messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
 		if err != nil {
 			fmt.Println(err)
-			return syserr.NewSourceNotFound("没有这样的群或用户")
+			return syserr.NewSourceNotFound("没有这样的用户")
+		}
+		defer messageFile.Close()
+		var fromId = JWT.AtNum
+		message := body.Message{
+			FormId:      fromId,
+			SendTime:    sendRequest.SendTime,
+			Body:        sendRequest.Body,
+			ContentType: sendRequest.ContentType,
+		}
+		body, err := readAndWrite.Encoding(&message)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return err
+		}
+		_, err = messageFile.WriteString(body)
+		return err
+	}()
+	rest.WriteEntity(nil, err, response)
+}
+
+// 发送消息到话题资源
+//也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
+//会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
+func (sourceService *SourceService) groupSend(request *restful.Request, response *restful.Response) {
+	err := func() error {
+		sendRequest := new(model.SendRequest)
+		err := request.ReadEntity(sendRequest)
+		if err != nil {
+			return syserr.NewBadRequestErr(err.Error())
+		}
+		token := request.HeaderParameter(auth.AUTH_HEADER)
+		JWT, err := auth.GetJWT(token)
+		if err != nil {
+			return err
+		}
+		source := request.PathParameter("source")
+		err = permissionService.CheckGroupWritePermission(JWT, source)
+		if err != nil {
+			return err
+		}
+		path, err := filePathAdapter.Handle(request.Request.RequestURI)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return err
+		}
+		// check content type
+		err = new(body.Message).CheckContentType(sendRequest.ContentType)
+		if err != nil {
+			return syserr.NewContentTypeErr(err.Error())
+		}
+		if sendRequest.SendTime == 0 {
+			sendRequest.SendTime = time.Now().UnixNano() / 1e6
+		}
+		messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
+		if err != nil {
+			fmt.Println(err)
+			return syserr.NewSourceNotFound("没有这样的群")
 		}
 		defer messageFile.Close()
 		var fromId = JWT.AtNum
@@ -209,6 +268,7 @@ func init() {
 	webService.Route(webService.GET("offset/{source}").To(sourceService.offset))
 	webService.Route(webService.GET("/{source}").To(sourceService.privateSourceListen))
 	webService.Route(webService.PUT("/{source}").To(sourceService.send))
+	webService.Route(webService.PUT("public/{source}").To(sourceService.groupSend))
 	webService.Route(webService.GET("open/{source}").To(sourceService.publicSourceListen))
 	binder.BindAdd()
 }
