@@ -199,7 +199,7 @@ func (g *GroupMemberModel) GetGroupMemberByGroupIdAndMemberId(groupID string, me
 }
 
 // 根据memberID 查询所有的群  并刷新缓存信息
-func (g *GroupMemberModel) RefushCacheByMember(memberId string) {
+func (g *GroupMemberModel) RefreshCacheByMember(memberId string) {
 	var groupMembers []GroupMemberModel
 	err := mysql.DB.Where("group_member_id = ?", memberId).Find(&groupMembers).Error
 	if err != nil {
@@ -207,12 +207,12 @@ func (g *GroupMemberModel) RefushCacheByMember(memberId string) {
 		return
 	}
 	for _, gm := range groupMembers {
-		g.RefushCacheGroupMemberInfo(gm.GroupID, gm.GroupMemberID)
+		g.RefreshCacheGroupMemberInfo(gm.GroupID, gm.GroupMemberID)
 	}
 }
 
 // 根据 userID groupID 从db查询并刷新groupMemberInfo 缓存到redis
-func (g *GroupMemberModel) RefushCacheGroupMemberInfo(groupID string, memberID string) {
+func (g *GroupMemberModel) RefreshCacheGroupMemberInfo(groupID string, memberID string) {
 	groupMemberModel := new(GroupMemberModel)
 	err := mysql.DB.Where("group_id = ? and group_member_id=?", groupID, memberID).Find(groupMemberModel).Error
 	if err != nil {
@@ -232,15 +232,21 @@ func (g *GroupMemberModel) RefushCacheGroupMemberInfo(groupID string, memberID s
 	}
 }
 
-// 验证当前用户和所在group中的角色
-func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string) bool {
+// 验证当前用户和所在group中的角色,验证是否是群主
+func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string,isGroupMain bool) bool {
 	groupMemberModel, err := g.GetGroupMemberByGroupIdAndMemberId(groupID, userID)
 	if err != nil {
 		log.Log.Error(err)
 		return false
 	}
-	if groupMemberModel.GroupMemberRole != 0 {
-		return true
+	if isGroupMain {
+		if groupMemberModel.GroupMemberRole != 0 {
+			return true
+		}
+	}else {
+		if groupMemberModel.GroupMemberRole == 1 {
+			return true
+		}
 	}
 	return false
 }
@@ -258,4 +264,9 @@ func (*GroupMemberModel) FindByNickName(f *FindByNickNameModel) (*GroupMemberMod
 		}
 	}()
 	return groupMemberInfo, err
+}
+
+// 解散群 删除群成员 清除缓存
+func (*GroupMemberModel) DissolutionGroupAndClearCache(){
+
 }

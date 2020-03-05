@@ -139,7 +139,7 @@ func (*GroupMemberService) setGroupAdmin(request *restful.Request, response *res
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefreshCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
@@ -153,7 +153,7 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 		if err != nil {
 			return err
 		}
-		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))),false)){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 		// 设置昵称
@@ -162,7 +162,7 @@ func (*GroupMemberService) setMemberNickName(request *restful.Request, response 
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefreshCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)
@@ -177,7 +177,7 @@ func (*GroupMemberService) signOutGroupChat(request *restful.Request, response *
 			return err
 		}
 
-		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))),false)){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 
@@ -201,7 +201,7 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 		if err != nil {
 			return err
 		}
-		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))))){
+		if !(groupMemberModelService.CheckGroupRole(groupModelParams.GroupID,utils.Strval(utils.Strval(request.Attribute("currentUserId"))),false)){
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
 		// 设置禁言
@@ -210,7 +210,7 @@ func (*GroupMemberService) setForbidden(request *restful.Request, response *rest
 			return nil
 		}
 		// 刷新缓存
-		groupMemberModelService.RefushCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
+		groupMemberModelService.RefreshCacheGroupMemberInfo(groupModelParams.GroupID,groupModelParams.GroupMemberID)
 		return nil
 	}()
 	rest.WriteEntity(nil,err,response)

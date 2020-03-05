@@ -119,5 +119,5 @@ func (*UserModel) refushCache(ID string) {
 	}
 
 	// 刷新group-member缓存
-	groupMemberMolde.RefushCacheByMember(ID)
+	groupMemberMolde.RefreshCacheByMember(ID)
 }
