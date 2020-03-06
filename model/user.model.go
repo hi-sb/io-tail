@@ -27,7 +27,8 @@ type UserModel struct {
 	NickName string
 	// 头像
 	Avatar string
-
+	// 0:普通用户  1 后端管理人员
+	UserRole int `gorm:"type:int(2);not null;default:0"`
 	// 公私钥
 	PrvKey string
 	PubKey string

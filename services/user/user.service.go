@@ -55,6 +55,7 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 		userModel := new(model.UserModel)
 		userModel.MobileNumber = registerModel.MobileNumber
 		userModel.NickName = registerModel.MobileNumber
+		userModel.UserRole = 0 // 设置为普通用户
 		return userModel, nil
 	}()
 	if err == nil {

@@ -300,7 +300,6 @@ func (*GroupMemberModel) DissolutionGroupAndClearCache(groupId string) error {
 	return err
 }
 
-
 // 验证当前用户是否可以在当前group中发言 false:禁言 true：正常说话
 func (g *GroupMemberModel) CheckMemberIsTalk(groupId string,memberId string) bool{
 	// 验证是否是群成员
