@@ -17,6 +17,10 @@ const (
 	MessageTypeUrlVoice string = "voice/url"
 	// img message
 	MessageTypeUrlImg string = "img/url"
+	// sys notify message
+	MessageTypeNotify string = "notify/text"
+	// Add friends
+	MessageTypeAddFriends string = "add-friends/json"
 )
 
 // message
@@ -54,6 +58,10 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 		return 4, nil
 	case MessageTypeUrlImg:
 		return 5, nil
+	case MessageTypeNotify:
+		return 6, nil
+	case MessageTypeAddFriends:
+		return 7, nil
 	default:
 		return -1, errors.New("非法的 ContentType")
 	}

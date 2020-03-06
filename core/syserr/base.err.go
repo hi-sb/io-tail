@@ -21,3 +21,7 @@ func (err *BaseError) Error() string {
 func (err *BaseError) Code() int {
 	return err.code
 }
+
+func NewBaseErr(message string) error {
+	return &BaseError{message:message}
+}

@@ -46,11 +46,7 @@ func NewDefaultTell(offset int64) *Tell {
 }
 
 // tell
-func (tell *Tell) TellMessage(tellChan TellChan, request *http.Request) error {
-	path, err := tell.TellConfig.FilePathAdapter.Handle(request.RequestURI)
-	if err != nil {
-		return err
-	}
+func (tell *Tell) TellMessage(tellChan TellChan, path string, request *http.Request) error {
 	return tell.TellBind(path, tellChan, request)
 }
 

@@ -19,7 +19,6 @@ import (
 
 //
 type SourceService struct {
-
 }
 
 var (
@@ -28,13 +27,6 @@ var (
 	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
 	permissionService = new(PermissionService)
 )
-
-
-// 创建一个群
-func (*SourceService) CreateOpenSource(openSource *model.OpenSource) (bool, error) {
-	//todo
-	return false,nil
-}
 
 //
 // 监听私有资源
@@ -62,8 +54,14 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 		if err != nil {
 			return "", "", syserr.NewBadRequestErr("错误的参数 offset")
 		}
+		path, err := filePathAdapter.Handle(source)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return "", "", err
+		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -91,7 +89,13 @@ func (sourceService *SourceService) publicSourceListen(request *restful.Request,
 			return "", "", syserr.NewBadRequestErr("错误的offset参数")
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, request.Request)
+		path, err := filePathAdapter.Handle(source)
+		if err != nil {
+			err = syserr.NewSysErr(err.Error())
+			fmt.Println(err)
+			return "", "", err
+		}
+		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -145,7 +149,7 @@ func (sourceService *SourceService) offset(request *restful.Request, response *r
 	rest.WriteEntity(offset, err, response)
 }
 
-// 发送消息到话题资源
+//发送消息到话题资源
 //也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
 //会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
 func (sourceService *SourceService) send(request *restful.Request, response *restful.Response) {
@@ -165,46 +169,12 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 		if err != nil {
 			return err
 		}
-		path, err := filePathAdapter.Handle(request.Request.RequestURI)
-		if err != nil {
-			err = syserr.NewSysErr(err.Error())
-			fmt.Println(err)
-			return err
-		}
-		// check content type
-		err = new(body.Message).CheckContentType(sendRequest.ContentType)
-		if err != nil {
-			return syserr.NewContentTypeErr(err.Error())
-		}
-		if sendRequest.SendTime == 0 {
-			sendRequest.SendTime = time.Now().UnixNano() / 1e6
-		}
-		messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
-		if err != nil {
-			fmt.Println(err)
-			return syserr.NewSourceNotFound("没有这样的用户")
-		}
-		defer messageFile.Close()
-		var fromId = JWT.AtNum
-		message := body.Message{
-			FormId:      fromId,
-			SendTime:    sendRequest.SendTime,
-			Body:        sendRequest.Body,
-			ContentType: sendRequest.ContentType,
-		}
-		body, err := readAndWrite.Encoding(&message)
-		if err != nil {
-			err = syserr.NewSysErr(err.Error())
-			fmt.Println(err)
-			return err
-		}
-		_, err = messageFile.WriteString(body)
-		return err
+		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
 	rest.WriteEntity(nil, err, response)
 }
 
-// 发送消息到话题资源
+//发送消息到话题资源
 //也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
 //会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
 func (sourceService *SourceService) groupSend(request *restful.Request, response *restful.Response) {
@@ -224,43 +194,46 @@ func (sourceService *SourceService) groupSend(request *restful.Request, response
 		if err != nil {
 			return err
 		}
-		path, err := filePathAdapter.Handle(request.Request.RequestURI)
-		if err != nil {
-			err = syserr.NewSysErr(err.Error())
-			fmt.Println(err)
-			return err
-		}
-		// check content type
-		err = new(body.Message).CheckContentType(sendRequest.ContentType)
-		if err != nil {
-			return syserr.NewContentTypeErr(err.Error())
-		}
-		if sendRequest.SendTime == 0 {
-			sendRequest.SendTime = time.Now().UnixNano() / 1e6
-		}
-		messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
-		if err != nil {
-			fmt.Println(err)
-			return syserr.NewSourceNotFound("没有这样的群")
-		}
-		defer messageFile.Close()
-		var fromId = JWT.AtNum
-		message := body.Message{
-			FormId:      fromId,
-			SendTime:    sendRequest.SendTime,
-			Body:        sendRequest.Body,
-			ContentType: sendRequest.ContentType,
-		}
-		body, err := readAndWrite.Encoding(&message)
-		if err != nil {
-			err = syserr.NewSysErr(err.Error())
-			fmt.Println(err)
-			return err
-		}
-		_, err = messageFile.WriteString(body)
-		return err
+		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
 	rest.WriteEntity(nil, err, response)
+}
+
+func (sourceService *SourceService) SendMessage(fromId string, toId string, sendRequest *model.SendRequest) error {
+	path, err := filePathAdapter.Handle(toId)
+	if err != nil {
+		err = syserr.NewSysErr(err.Error())
+		fmt.Println(err)
+		return err
+	}
+	// check content type
+	err = new(body.Message).CheckContentType(sendRequest.ContentType)
+	if err != nil {
+		return syserr.NewContentTypeErr(err.Error())
+	}
+	if sendRequest.SendTime == 0 {
+		sendRequest.SendTime = time.Now().UnixNano() / 1e6
+	}
+	messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println(err)
+		return syserr.NewSourceNotFound("没有这样的群或用户")
+	}
+	defer messageFile.Close()
+	message := body.Message{
+		FormId:      fromId,
+		SendTime:    sendRequest.SendTime,
+		Body:        sendRequest.Body,
+		ContentType: sendRequest.ContentType,
+	}
+	body, err := readAndWrite.Encoding(&message)
+	if err != nil {
+		err = syserr.NewSysErr(err.Error())
+		fmt.Println(err)
+		return err
+	}
+	_, err = messageFile.WriteString(body)
+	return err
 }
 
 func init() {
