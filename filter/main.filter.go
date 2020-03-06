@@ -7,5 +7,5 @@ import "github.com/emicklei/go-restful"
 func init() {
 	restful.Filter(globalLogging)
 	restful.Filter(globalAuthTokenFilter)
-//	restful.Filter(groupPowerFilter)
+	restful.Filter(globalAdminFilter)
 }

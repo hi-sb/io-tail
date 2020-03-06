@@ -66,7 +66,7 @@ func (this *RegisterModel) Check() error {
 }
 
 // 根据id获取用户信息
-func (*UserModel) GetInfoById(ID string)*UserModel{
+func (*UserModel) GetInfoById(ID string) *UserModel{
 	user := new(UserModel)
 	// 从redis获取
 	result ,err := cache.RedisClient.HGet(constants.USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX,ID)).Result()
