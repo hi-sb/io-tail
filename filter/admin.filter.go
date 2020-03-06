@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/core/auth"
 	"github.com/hi-sb/io-tail/core/rest"
@@ -10,16 +9,11 @@ import (
 	"strings"
 )
 
+
+var userModelService = new(model.UserModel)
+
 // 全局登录验证
 func globalAdminFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	// 忽略验证的url集合
-	urlMap := map[string]string {
-		"_verify_sms":"/verify/sms",
-		"_user_login":"/user/login",
-	}
-	// 当前请求的URI 是否是/admin开头
-	uri := strings.Replace(fmt.Sprintf("%s", req.Request.URL),"/","_",-1)
-
 	if strings.HasPrefix(req.Request.URL.String(),"/admin") {
 		result,err := checkUserRole(req)
 		if err != nil {
@@ -46,7 +40,7 @@ func checkUserRole(req *restful.Request) (bool,error){
 	}else{
 		req.SetAttribute(CURRENT_USER,userId)
 		// 验证角色
-		userInfo := model.UserModel{}.GetInfoById(userId)
+		userInfo := userModelService.GetInfoById(userId)
 		if userInfo == nil {
 			return false,syserr.NewServiceError("对不起，您无权限访问")
 		}
