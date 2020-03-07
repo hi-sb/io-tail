@@ -13,6 +13,7 @@ import (
 	_ "github.com/hi-sb/io-tail/services/group"
 	_ "github.com/hi-sb/io-tail/services/mini"
 	_ "github.com/hi-sb/io-tail/services/sms"
+	_ "github.com/hi-sb/io-tail/services/source"
 	_ "github.com/hi-sb/io-tail/services/user"
 	"net/http"
 	"os"
@@ -32,7 +33,6 @@ func printASCIILogo() {
 	fmt.Println(logo)
 }
 
-
 // http service
 func httpService(httpAddr *string) {
 	fmt.Println("Start http server listen build addr is ", *httpAddr)
@@ -49,7 +49,6 @@ func MysqlService(addr *string, showSql *bool) {
 		os.Exit(1)
 	}
 }
-
 
 // redis lock service
 func RedisLockService(url *string, pw *string) {

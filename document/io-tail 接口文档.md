@@ -877,11 +877,281 @@
 }
 ```
 
+### 5.1 监听私有消息
+##### URI
+
+> GET /topic/private
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> query 参数: offset int 
+
+> 描述：offset 为消息读取位置，当收到一条消息后，该消息内容将包含该字段的描述（也就是当前消息在话题中的位置）。
+> 在进行消息监听的时候，如果传入该字段则表示从指定位置开始监听消息。如果不传入该字段则认为从昂头开始监听消息，也就是
+>同时拉取所有历史消息。读取消息方式为，使用http协议访问该地址，然后按行读取响应流，每一行则是一条新的消息。如果该链接断开，
+>应该重新创建链接进行监听（传入上一条消息offset，不然会拉取历史消息）。当http 状态码为200时则表示监听成功，非200则表示监听失败。监听
+>失败时，应该将响应流中的所有内容读出，作为错误响应。
+
+##### Content type ：
+```
+
+	// text message
+	//文本消息，格式也是文本
+	MessageTypeText string = "text/text"
+	//语音消息，格式是base64
+	// voice message
+	MessageTypeBase64Voice string = "voice/base64"
+	//图片消息，格式是base64
+	// img message
+	MessageTypeBase64Img string = "img/base64"
+	//语音消息，格式是一个语音下载地址
+	// voice message
+	MessageTypeUrlVoice string = "voice/url"
+	//图片消息 格式是一个图片下载地址
+	// img message
+	MessageTypeUrlImg string = "img/url"
+	//系统通知消息，格式为文本
+	// sys notify message
+	MessageTypeNotify string = "notify/text"
+	//添加好友消息，格式为一个json
+	// Add friends
+	MessageTypeAddFriends string = "add-friends/json"
+
+```
+
+##### 非200 状态码错误响应格式
+
+```
+
+{
+ "Message": "错误内容",
+ "Code": 1016,
+ "Body": null,
+ "Success": false
+}
+
+```
+
+##### 200 状态码正常消息格式
+
+```
+{
+    	// form user id
+    	FormId:"发送者的id",
+    	// send time
+    	SendTime:"发送时间",
+    	// message body
+    	Body:"消息内容",
+    	// offset
+    	Offset:"当前监听的话题位置",
+    	// message type
+    	ContentType:"消息体格式类型"
+}
+
+```
+
+### 5.2 监听群消息
+##### URI
+
+> GET /topic/group/{source}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：source string 群id 
+
+> query 参数: offset int 
+
+> 描述：offset 为消息读取位置，当收到一条消息后，该消息内容将包含该字段的描述（也就是当前消息在话题中的位置）。
+> 在进行消息监听的时候，如果传入该字段则表示从指定位置开始监听消息。如果不传入该字段则认为从昂头开始监听消息，也就是
+>同时拉取所有历史消息。读取消息方式为，使用http协议访问该地址，然后按行读取响应流，每一行则是一条新的消息。如果该链接断开，
+>应该重新创建链接进行监听（传入上一条消息offset，不然会拉取历史消息）。当http 状态码为200时则表示监听成功，非200则表示监听失败。监听
+>失败时，应该将响应流中的所有内容读出，作为错误响应。
+
+##### Content type ：
+```
+
+	// text message
+	//文本消息，格式也是文本
+	MessageTypeText string = "text/text"
+	//语音消息，格式是base64
+	// voice message
+	MessageTypeBase64Voice string = "voice/base64"
+	//图片消息，格式是base64
+	// img message
+	MessageTypeBase64Img string = "img/base64"
+	//语音消息，格式是一个语音下载地址
+	// voice message
+	MessageTypeUrlVoice string = "voice/url"
+	//图片消息 格式是一个图片下载地址
+	// img message
+	MessageTypeUrlImg string = "img/url"
+	//系统通知消息，格式为文本
+	// sys notify message
+	MessageTypeNotify string = "notify/text"
+	//添加好友消息，格式为一个json
+	// Add friends
+	MessageTypeAddFriends string = "add-friends/json"
+```
+
+
+##### 非200 状态码错误响应格式
+
+```
+
+{
+ "Message": "错误内容",
+ "Code": 1016,
+ "Body": null,
+ "Success": false
+}
+
+```
+##### 200 状态码正常消息格式
+```
+{
+    	// form user id
+    	FormId:"发送者的id",
+    	// send time
+    	SendTime:"发送时间",
+    	// message body
+    	Body:"消息内容",
+    	// offset
+    	Offset:"当前监听的话题位置",
+    	// message type
+    	ContentType:"消息体格式类型"
+}
+
+```
+
+### 5.3 发送好友消息
+
+##### URI
+
+> PUT /topic/private/{source}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：source string  好友的id
+
+##### Content type ：
+```
+
+	// text message
+	//文本消息，格式也是文本
+	MessageTypeText string = "text/text"
+	//语音消息，格式是base64
+	// voice message
+	MessageTypeBase64Voice string = "voice/base64"
+	//图片消息，格式是base64
+	// img message
+	MessageTypeBase64Img string = "img/base64"
+	//语音消息，格式是一个语音下载地址
+	// voice message
+	MessageTypeUrlVoice string = "voice/url"
+	//图片消息 格式是一个图片下载地址
+	// img message
+	MessageTypeUrlImg string = "img/url"
+	//系统通知消息，格式为文本
+	// sys notify message
+	MessageTypeNotify string = "notify/text"
+	//添加好友消息，格式为一个json
+	// Add friends
+	MessageTypeAddFriends string = "add-friends/json"
+```
+
+##### 请求体
+
+```
+{
+    Body:"消息内容"，
+    ContentType:"内容格式"
+}
+```
+
+#####  响应体 
+
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Success": true
+}
+
+```
 
 
 
+### 5.4 发送群消息
+##### URI
 
+> PUT /topic/group/{source}
 
+> 请求头 AUTH_TOKEN : TOKEN
 
+> path 参数：source string 群id 
+
+##### Content type ：
+```
+
+	// text message
+	//文本消息，格式也是文本
+	MessageTypeText string = "text/text"
+	//语音消息，格式是base64
+	// voice message
+	MessageTypeBase64Voice string = "voice/base64"
+	//图片消息，格式是base64
+	// img message
+	MessageTypeBase64Img string = "img/base64"
+	//语音消息，格式是一个语音下载地址
+	// voice message
+	MessageTypeUrlVoice string = "voice/url"
+	//图片消息 格式是一个图片下载地址
+	// img message
+	MessageTypeUrlImg string = "img/url"
+	//系统通知消息，格式为文本
+	// sys notify message
+	MessageTypeNotify string = "notify/text"
+	//添加好友消息，格式为一个json
+	// Add friends
+	MessageTypeAddFriends string = "add-friends/json"
+```
+
+##### 请求体
+
+```
+{
+    Body:"消息内容"，
+    ContentType:"内容格式"
+}
+```
+
+#####  响应体 
+
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Success": true
+}
+
+```
+### 5.5 获取自己在指定话题的监听位置，也就是offset
+##### URI
+
+> GET /topic/offset/{source}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：source string 群id 或者自己的id（可通过解析token获得）
+
+##### 响应体：
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body":167616,//offset
+    "Success": true
+}
+```
 
 
