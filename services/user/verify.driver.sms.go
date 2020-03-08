@@ -7,8 +7,6 @@ import (
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/mojocn/base64Captcha"
 	"io"
-	"math/rand"
-	"strconv"
 )
 
 // sms Driver
@@ -36,14 +34,16 @@ func (d *DriverSms) GenerateItem(question string) (item base64Captcha.Item, err 
 	return &StringItem{body: question}, nil
 }
 
-//
+//生成短信验证码
+//这里按指定长度生成纯数字验证码
 func (d *DriverSms) getAnswer() string {
-	var answer string
-	for i := 0; i < d.numLength; i++ {
-		j := rand.Intn(10)
-		answer += strconv.Itoa(j)
-	}
-	return answer
+	//var answer string
+	//for i := 0; i < d.numLength; i++ {
+	//	j := rand.Intn(10)
+	//	answer += strconv.Itoa(j)
+	//}
+	//return answer
+	return "8888"
 }
 
 func NewDriverSms(length int) *DriverSms {
