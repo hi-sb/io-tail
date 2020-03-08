@@ -77,7 +77,7 @@
 
 ### 1.3 更新昵称/头像
 ##### URI
-> POST  /user/login
+> POST  /user/update
 
 
 ##### 请求参数
