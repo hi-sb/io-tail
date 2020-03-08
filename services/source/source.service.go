@@ -40,12 +40,6 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 		if err != nil {
 			return "", "", err
 		}
-		source := request.PathParameter("source")
-		// this service user
-		// and id == source
-		if JWT.AtNum != source {
-			return "", "", syserr.NewTokenAuthError("拒绝访问")
-		}
 		offset := request.QueryParameter("offset")
 		var offsetInt int64
 		if offset != "" {
@@ -54,14 +48,14 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 		if err != nil {
 			return "", "", syserr.NewBadRequestErr("错误的参数 offset")
 		}
-		path, err := filePathAdapter.Handle(source)
+		path, err := filePathAdapter.Handle(JWT.ID)
 		if err != nil {
 			err = syserr.NewSysErr(err.Error())
 			fmt.Println(err)
 			return "", "", err
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
+		return JWT.AtNum, JWT.ID, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -239,9 +233,9 @@ func (sourceService *SourceService) SendMessage(fromId string, toId string, send
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/topic")
 	webService.Route(webService.GET("offset/{source}").To(sourceService.offset))
-	webService.Route(webService.GET("/{source}").To(sourceService.privateSourceListen))
-	webService.Route(webService.PUT("/{source}").To(sourceService.send))
-	webService.Route(webService.PUT("public/{source}").To(sourceService.groupSend))
-	webService.Route(webService.GET("open/{source}").To(sourceService.publicSourceListen))
+	webService.Route(webService.GET("private").To(sourceService.privateSourceListen))
+	webService.Route(webService.PUT("private/{source}").To(sourceService.send))
+	webService.Route(webService.GET("group/{source}").To(sourceService.publicSourceListen))
+	webService.Route(webService.PUT("group/{source}").To(sourceService.groupSend))
 	binder.BindAdd()
 }
