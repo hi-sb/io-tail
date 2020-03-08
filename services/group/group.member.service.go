@@ -233,6 +233,9 @@ func (*GroupMemberService) findByNickName(request *restful.Request, response *re
 
 
 
+
+
+
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group-member")
 	webService.Route(webService.POST("/join").To(groupMemberService.newMemberJoin))

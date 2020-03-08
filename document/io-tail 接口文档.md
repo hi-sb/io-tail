@@ -694,6 +694,66 @@
 
 
 
+### 3.13 查询当前用户已经加入的群
+
+##### URI
+> GET  /group/join/items
+> 请求头 AUTH_TOKEN : TOKEN
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": [
+        {
+            "ID": "be43b195a3bb4eb5abe73f246f8d9c47",
+            "CreatedAt": "2020-02-28T15:34:47+08:00",
+            "UpdatedAt": "2020-02-28T15:34:47+08:00",
+            "GroupName": "群聊",
+            "GroupAnnouncement": "测试更新群公告哈哈",
+            "GreateUserID": "e52781a030724f9080e88f0847caf400",
+            "GroupChatStatus": 0
+        },
+        {
+            "ID": "4d01bd5f3723426581ff962c3c545f36",
+            "CreatedAt": "2020-02-28T17:15:09+08:00",
+            "UpdatedAt": "2020-02-28T17:15:09+08:00",
+            "GroupName": "群聊",
+            "GroupAnnouncement": "群公告",
+            "GreateUserID": "e52781a030724f9080e88f0847caf400",
+            "GroupChatStatus": 1
+        },
+        {
+            "ID": "f6b7b75c505e4a0087dbca6e1cd4ffd3",
+            "CreatedAt": "2020-02-28T17:06:21+08:00",
+            "UpdatedAt": "2020-02-28T17:06:21+08:00",
+            "GroupName": "群聊",
+            "GroupAnnouncement": "群公告",
+            "GreateUserID": "e52781a030724f9080e88f0847caf400",
+            "GroupChatStatus": 1
+        },
+        {
+            "ID": "e781e6e03fd64e84897295eed219d619",
+            "CreatedAt": "2020-02-28T17:20:29+08:00",
+            "UpdatedAt": "2020-02-28T17:20:29+08:00",
+            "GroupName": "群聊",
+            "GroupAnnouncement": "群公告",
+            "GreateUserID": "e52781a030724f9080e88f0847caf400",
+            "GroupChatStatus": 1
+        }
+    ],
+    "Success": true
+}
+```
+
+
+
+
+
+
+
+
 
 
 

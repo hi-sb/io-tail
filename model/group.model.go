@@ -66,6 +66,7 @@ type GroupInfoAndMembersModel struct {
 
 
 /**
+/**
     isNewGroup: true 新建   false 缓存读取
 	获取成员和成员基础信息
 	如果是新创建的群  缓存到 redis  反之从redis读取
@@ -178,3 +179,17 @@ func (g *GroupModel) CheckGroupLife(groupId string) bool {
 	return true
 }
 
+// 根据userId 查询已经加入的群
+func (g *GroupModel) GetGroupsByUserId(userId string)(*[]GroupModel,error) {
+	groupIds := groupMemberModelService.GetMemberGroupByMember(userId)
+	var groups []GroupModel
+	var err error
+	for _,id  := range *groupIds {
+		group := new(GroupModel)
+		err = mysql.DB.Where("id = ?",id ).Find(group).Error
+		if err == nil {
+			groups = append(groups, *group)
+		}
+	}
+	return &groups,err
+}

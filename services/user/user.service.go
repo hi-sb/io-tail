@@ -125,6 +125,7 @@ func (*UserService) updateInfO(request *restful.Request, response *restful.Respo
 
 
 
+
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
 	webService.Route(webService.GET("/{token}").To(userService.get))

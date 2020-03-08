@@ -318,3 +318,22 @@ func (g *GroupMemberModel) CheckMemberIsTalk(groupId string,memberId string) boo
 	}
 	return false
 }
+
+
+
+// 根据UserId 查询所有已经加入的群
+func (g *GroupMemberModel) GetMemberGroupByMember(memberId string) *[]string {
+	var groupMembers []GroupMemberModel
+	err := mysql.DB.Where("group_member_id = ?", memberId).Find(&groupMembers).Error
+	if err != nil {
+		log.Log.Error(err)
+		return nil
+	}
+
+	var groupIds []string
+
+	for _, gm := range groupMembers {
+		groupIds = append(groupIds, gm.GroupID)
+	}
+	return &groupIds
+}

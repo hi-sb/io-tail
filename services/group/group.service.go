@@ -219,6 +219,15 @@ func (*GroupService) checkDialogueStatus(request *restful.Request, response *res
 	rest.WriteErrAndEntity(result, err, response)
 }
 
+// 根据UserId 获取已经加入的群
+func (*GroupService) findGroupIdsByUserId(request *restful.Request, response *restful.Response) {
+	groupArray,err := func()(*[]model.GroupModel,error) {
+		return groupModelService.GetGroupsByUserId(utils.Strval(utils.Strval(request.Attribute("currentUserId"))))
+	}()
+	rest.WriteEntity(groupArray,err,response)
+}
+
+
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))
@@ -227,5 +236,6 @@ func init() {
 	webService.Route(webService.PUT("/global/forbidden/words").To(groupService.updateGroupForbiddenStatus))
 	webService.Route(webService.DELETE("{groupID}").To(groupService.delGroupById))
 	webService.Route(webService.GET("/check/{groupID}").To(groupService.checkDialogueStatus))
+	webService.Route(webService.GET("/join/items").To(groupService.findGroupIdsByUserId))
 	binder.BindAdd()
 }
