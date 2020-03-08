@@ -86,6 +86,7 @@ func (*UserModel) GetInfoById(ID string) *UserModel{
 // 根据ids获取用户信息
 func (*UserModel) GetInfoByIds(ids *[]string)*[]UserModel{
 	var users []UserModel
+	// TODO 此处有可能有问题 有待进一步确认
 	idArrayStr := strings.Replace(strings.Trim(fmt.Sprint(*ids), "[]"), " ", ",", -1)
 	err := mysql.DB.Where("id in (?)", idArrayStr).Find(&users).Error
 	if err != nil {
