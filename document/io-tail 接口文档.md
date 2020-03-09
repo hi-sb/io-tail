@@ -229,7 +229,7 @@
 
 ### 2.6 根据手机号搜索好友（添加好友使用）
 ##### URI
-> GET  /friend/{phone}
+> GET  /friend/search/{phone}
 
 > 请求头 AUTH_TOKEN : TOKEN
 
@@ -1294,5 +1294,28 @@
     "Success": true
 }
 ```
+
+### 6.1 按用户id获取用户简要信息（昵称、头像）
+##### URI
+
+> GET /user/briefly/{id}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：id string 用户id
+
+##### 响应体：
+```
+{
+ "Message": "OK",
+ "Code": 200,
+ "Body": {
+  "NickName": "13816880001",
+  "Avatar": ""
+ },
+ "Success": true
+}
+```
+
 
 
