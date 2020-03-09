@@ -20,9 +20,9 @@ import (
 type UserService struct {
 	//
 }
+
 //地址
 var userService = new(UserService)
-
 
 //用token 获取用户信息
 func (*UserService) get(request *restful.Request, response *restful.Response) {
@@ -75,14 +75,14 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 				userModel.Bind()
 				return tx.Create(userModel).Error
 			})
-		}else {
+		} else {
 			userModel.ID = user.ID
 		}
 		// 缓存用户信息
-		data,err := json.Marshal(userModel)
+		data, err := json.Marshal(userModel)
 		if err == nil {
-			_,err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY,fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX,userModel.ID),data).Result()
-			if err !=nil {
+			_, err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY, fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX, userModel.ID), data).Result()
+			if err != nil {
 				println(err)
 			}
 		}
@@ -93,7 +93,7 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 		jwt := auth.JWT{
 			UserName: userModel.MobileNumber,
 			ID:       userModel.ID,
-			Duration:  time.Minute*10080,
+			Duration: time.Minute * 10080,
 		}
 		token, err = auth.CreateToken(&jwt)
 	}
@@ -101,8 +101,8 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 }
 
 // 更新用户信息（昵称头像）
-func (*UserService) updateInfO(request *restful.Request, response *restful.Response){
-	err := func() error{
+func (*UserService) updateInfO(request *restful.Request, response *restful.Response) {
+	err := func() error {
 		userId := utils.Strval(request.Attribute("currentUserId"))
 		userMode := new(model.UserModel)
 		err := request.ReadEntity(userMode)
@@ -111,23 +111,35 @@ func (*UserService) updateInfO(request *restful.Request, response *restful.Respo
 		}
 		userMode.ID = userId
 		if userMode.NickName != "" {
-			mysql.DB.Model(userMode).UpdateColumn("nick_name",userMode.NickName)
+			mysql.DB.Model(userMode).UpdateColumn("nick_name", userMode.NickName)
 		}
 		if userMode.Avatar != "" {
-			mysql.DB.Model(userMode).UpdateColumn("avatar",userMode.Avatar)
+			mysql.DB.Model(userMode).UpdateColumn("avatar", userMode.Avatar)
 		}
 
 		// 刷新缓存
 		return nil
 	}()
-	rest.WriteEntity(nil,err,response)
+	rest.WriteEntity(nil, err, response)
 }
 
-
-
+//从缓存获取简要信息
+func (*UserService) briefly(request *restful.Request, response *restful.Response) {
+	id := request.PathParameter("id")
+	user := new(model.UserModel).GetInfoById(id)
+	var userBriefly model.UserBriefly
+	if user != nil {
+		userBriefly = model.UserBriefly{
+			NickName: user.NickName,
+			Avatar:   user.Avatar,
+		}
+	}
+	rest.WriteEntity(userBriefly, nil, response)
+}
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
+	webService.Route(webService.GET("/briefly/{id}").To(userService.briefly))
 	webService.Route(webService.GET("/{token}").To(userService.get))
 	webService.Route(webService.POST("/login").To(userService.regOrlogin))
 	webService.Route(webService.PUT("/update").To(userService.regOrlogin))

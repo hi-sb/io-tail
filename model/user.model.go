@@ -35,6 +35,15 @@ type UserModel struct {
 
 }
 
+// user briefly
+// 用户简要，提供开放的访问
+type UserBriefly struct {
+	//昵称
+	NickName string
+	// 头像
+	Avatar string
+}
+
 // 注册 model
 type RegisterModel struct {
 	//手机号
