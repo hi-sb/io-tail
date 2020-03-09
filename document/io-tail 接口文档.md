@@ -228,7 +228,7 @@
 
 ### 2.6 根据手机号搜索好友（添加好友使用）
 ##### URI
-> GET  /friend/search/{phone}
+> GET  /friend/{phone}
 
 > 请求头 AUTH_TOKEN : TOKEN
 
