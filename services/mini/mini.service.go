@@ -81,6 +81,7 @@ func (*MiniService) page(request *restful.Request, response *restful.Response){
 func init(){
 	binder, webService := rest.NewJsonWebServiceBinder("/mini")
 	webService.Route(webService.GET("{id}").To(miniService.getOne))
+	webService.Route(webService.POST("/page").To(miniService.page))
 	binder.BindAdd()
 
 	binderAdmin, webServiceAdmin := rest.NewJsonWebServiceBinder("/admin/mini")

@@ -124,7 +124,6 @@ func (*MiniModel) RemoveByMiniId(id string) error {
 
 func (*MiniModel) FindOptionsPage(page base.Pager) (*base.Pager, error) {
 	var miniArray []MiniModel
-
 	// 查询
 	err := mysql.DB.
 		Limit(page.GetLimit()).
