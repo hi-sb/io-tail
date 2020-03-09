@@ -59,6 +59,9 @@ type PullBlackModel struct {
 
 // 好友请求返回模型
 type FriendAddReqModel struct {
+	// 主键ID
+	ID string
+	
 	FriendID string
 	// 手机号
 	MobileNumber string

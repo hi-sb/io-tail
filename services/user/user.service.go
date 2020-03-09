@@ -22,6 +22,7 @@ type UserService struct {
 }
 //地址
 var userService = new(UserService)
+var userModelService = new(model.UserModel)
 
 
 //用token 获取用户信息
@@ -116,7 +117,7 @@ func (*UserService) updateInfO(request *restful.Request, response *restful.Respo
 		if userMode.Avatar != "" {
 			mysql.DB.Model(userMode).UpdateColumn("avatar",userMode.Avatar)
 		}
-
+		userModelService.RefushCache(userId)
 		// 刷新缓存
 		return nil
 	}()

@@ -105,7 +105,7 @@ func (*UserModel) GetInfoByPhone(phone string) *UserModel {
 }
 
 // 修改操作后刷新用户缓存
-func (*UserModel) refushCache(ID string) {
+func (*UserModel) RefushCache(ID string) {
 	user := new(UserModel)
 	err := mysql.DB.Where("id =?", ID).First(user).Error
 	if err != nil {
