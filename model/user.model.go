@@ -62,6 +62,17 @@ type QuickLogin struct {
 	VerifyCode string
 }
 
+// 设置管理员
+type SetAdmin struct {
+	ID string
+	// 0:普通用户  1 后端管理人员
+	UserRole int
+}
+
+
+
+
+
 //检查
 func (this *RegisterModel) Check() error {
 	if len(this.MobileNumber) == 0 {

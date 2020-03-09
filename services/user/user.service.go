@@ -138,6 +138,21 @@ func (*UserService) briefly(request *restful.Request, response *restful.Response
 	rest.WriteEntity(userBriefly, nil, response)
 }
 
+// 设置管理员
+func (*UserService) setAdmin(request *restful.Request, response *restful.Response){
+	err := func() error {
+		setInfo := new(model.SetAdmin)
+		err:= request.ReadEntity(setInfo)
+		if err != nil {
+			return err
+		}
+		err = mysql.DB.Model(model.UserModel{}).Where("id = ?",setInfo.ID).UpdateColumn("user_role", setInfo.UserRole).Error
+		return err
+	}()
+	rest.WriteEntity(nil,err,response)
+}
+
+
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
 	webService.Route(webService.GET("/briefly/{id}").To(userService.briefly))
@@ -145,4 +160,11 @@ func init() {
 	webService.Route(webService.POST("/login").To(userService.regOrlogin))
 	webService.Route(webService.PUT("/update").To(userService.regOrlogin))
 	binder.BindAdd()
+
+
+	adminBinder, adminWebService := rest.NewJsonWebServiceBinder("/admin/user")
+	adminWebService.Route(webService.PUT("/update").To(userService.regOrlogin))
+	adminBinder.BindAdd()
+
 }
+

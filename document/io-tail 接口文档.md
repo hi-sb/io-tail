@@ -79,7 +79,6 @@
 ##### URI
 > POST  /user/update
 
-
 ##### 请求参数
 ```
 {
@@ -97,6 +96,31 @@
     "Success": true
 }
 ```
+
+### 1.4 设置后台管理人员
+##### URI
+> POST  /admin/user/update
+
+##### 请求参数
+```
+{
+	"ID":"",  // 用户id
+	"UserRole":""   // 0:普通用户  1 后端管理人员
+}
+```
+
+##### 响应内容
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": null,
+    "Success": true
+}
+```
+
+
+
 
 
 
