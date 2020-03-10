@@ -121,6 +121,7 @@ func (tell *Tell) tellChan(tail *tail.Tail, tellChan TellChan, request *http.Req
 		case <-time.After(5 * time.Second):
 			{
 				// time for done check
+				tellChan.Reader <- body.NewHeartbeatMessage()
 			}
 		}
 	}

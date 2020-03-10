@@ -2,6 +2,8 @@ package body
 
 import (
 	"errors"
+	"github.com/hi-sb/io-tail/utils"
+	"time"
 )
 
 const (
@@ -21,6 +23,8 @@ const (
 	MessageTypeNotify string = "notify/text"
 	// Add friends
 	MessageTypeAddFriends string = "add-friends/json"
+	//heartbeat
+	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 )
 
 // message
@@ -62,6 +66,8 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 		return 6, nil
 	case MessageTypeAddFriends:
 		return 7, nil
+	case MessageTypeHeartbeat:
+		return 8, nil
 	default:
 		return -1, errors.New("非法的 ContentType")
 	}
@@ -70,4 +76,8 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 func (message *Message) CheckContentType(contentType string) error {
 	_, err := message.GetMessageContentTypeNum(contentType)
 	return err
+}
+
+func NewHeartbeatMessage() *Message {
+	return &Message{ContentType:MessageTypeHeartbeat,Body:utils.Strval(time.Now().Unix())}
 }

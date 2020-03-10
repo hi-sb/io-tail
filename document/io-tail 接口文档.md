@@ -1039,7 +1039,92 @@
 
 
 
+###5.0 接收消息java 列子
+```
+public class Main {
 
+    public static OkHttpClient okHttpClient = new OkHttpClient.Builder().readTimeout(10, TimeUnit.SECONDS).build();
+
+    //监听地址，可以是私有消息的也可以是群消息的地址
+    private static final String source = "http://127.0.0.1:7654/topic/private";
+
+    //token
+    private static final String token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdE51bSI6IiIsImV4cCI6MTU4NDQzMTM1MywiaWF0IjoxNTgzODI2NTUzLCJpZCI6IjAxNmU0ODdhMTNlNTQ0MTc4NmZhMzE2ODgwNTE4Y2ZlIiwidHlwZSI6InVzZXIiLCJ1c2VybmFtZSI6IjEzODE2ODgwMDAzIn0._R1RuZAYs3LG-w5Ls1uy3tDOuiGtYj01j7MV8dxkvXU";
+
+    public static void main(String[] ags) {
+        new MessageListener(source,token) {
+            @Override
+            public void onErr(Throwable err) {
+                System.out.println(err.getMessage());
+            }
+
+            @Override
+            public void onMessage(String message) {
+                System.out.println(message);
+            }
+        }.listen();
+    }
+}
+
+class MessageListenerException extends Exception {
+
+    MessageListenerException(String message) {
+        super(message);
+    }
+}
+
+//做一个简单的 内部类
+abstract class MessageListener extends Thread {
+
+    private String source;
+
+    private String token;
+
+    public MessageListener(String source, String token) {
+        this.token = token;
+        this.source = source;
+    }
+
+    //收到消息
+    public abstract void onMessage(String message);
+
+    //错误回调
+    public abstract void onErr(Throwable err);
+
+    //开始监听
+    public void listen() {
+        this.start();
+    }
+
+    @Override
+    public void run() {
+        Request request = new Request.Builder().get().url(source).header("AUTH_TOKEN",token).build();
+        try {
+            Response response = Main.okHttpClient.newCall(request).execute();
+            //判断响应码
+            // 如果非200 则将流中的所有数据读出作为错误描述
+            if (!response.isSuccessful()) {
+                String body = response.body().string();
+                throw new MessageListenerException(body);
+            }
+            InputStreamReader inputStreamReader = new InputStreamReader(response.body().byteStream());
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            String message;
+            //按行读取
+            // 每一行就是一条消息，当没有新的消息时则阻塞
+            //当然如果采用非阻塞io，那么写法上不一样，不需要使用这个线程
+            while ((message = bufferedReader.readLine()) != null) {
+                onMessage(message);
+            }
+        } catch (MessageListenerException e) {
+            onErr(e);
+        } catch (IOException e) {
+            onErr(new RuntimeException(e.getMessage() + ":" + "网络错误，应该定时重连等操作"));
+        }
+    }
+}
+
+```
 
 
 ### 5.1 监听私有消息
@@ -1279,6 +1364,9 @@
 	//添加好友消息，格式为一个json
 	// Add friends
 	MessageTypeAddFriends string = "add-friends/json"
+	//heartbeat 心跳消息
+    //心跳消息可以忽略
+	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 ```
 
 ##### 请求体
