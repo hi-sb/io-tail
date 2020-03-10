@@ -1,19 +1,13 @@
 package user
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/emicklei/go-restful"
-	"github.com/hi-sb/io-tail/common/constants"
 	"github.com/hi-sb/io-tail/core/auth"
-	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
-	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/model"
 	"github.com/hi-sb/io-tail/utils"
-	"github.com/jinzhu/gorm"
 	"time"
 )
 
@@ -66,27 +60,28 @@ func (this *UserService) regOrlogin(request *restful.Request, response *restful.
 
 		if user.ID == "" {
 			// 注册
-			err = mysql.Transactional(func(tx *gorm.DB) error {
-				sync := lock.GetSync("register:" + userModel.MobileNumber)
-				err := sync.Lock()
-				if err != nil {
-					return err
-				}
-				defer sync.Unlock()
-				userModel.Bind()
-				return tx.Create(userModel).Error
-			})
+			//err = mysql.Transactional(func(tx *gorm.DB) error {
+			//	sync := lock.GetSync("register:" + userModel.MobileNumber)
+			//	err := sync.Lock()
+			//	if err != nil {
+			//		return err
+			//	}
+			//	defer sync.Unlock()
+			//	userModel.Bind()
+			//	return tx.Create(userModel).Error
+			//})
+			err = userModel.CreateAndJoinCache()
 		} else {
 			userModel.ID = user.ID
 		}
-		// 缓存用户信息
-		data, err := json.Marshal(userModel)
-		if err == nil {
-			_, err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY, fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX, userModel.ID), data).Result()
-			if err != nil {
-				println(err)
-			}
-		}
+		//// 缓存用户信息
+		//data, err := json.Marshal(userModel)
+		//if err == nil {
+		//	_, err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY, fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX, userModel.ID), data).Result()
+		//	if err != nil {
+		//		println(err)
+		//	}
+		//}
 	}
 	// 完成注册 并登录
 	var token string
@@ -152,6 +147,9 @@ func (*UserService) setAdmin(request *restful.Request, response *restful.Respons
 	rest.WriteEntity(nil,err,response)
 }
 
+func (*UserService) initAdmin(request *restful.Request, response *restful.Response){
+	userModelService.InitADMIN()
+}
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
@@ -159,12 +157,15 @@ func init() {
 	webService.Route(webService.GET("/{token}").To(userService.get))
 	webService.Route(webService.POST("/login").To(userService.regOrlogin))
 	webService.Route(webService.PUT("/update").To(userService.regOrlogin))
+	webService.Route(webService.GET("/admin/init").To(userService.initAdmin))
 	binder.BindAdd()
 
 
 	adminBinder, adminWebService := rest.NewJsonWebServiceBinder("/admin/user")
 	adminWebService.Route(webService.PUT("/update").To(userService.regOrlogin))
 	adminBinder.BindAdd()
+
+
 
 }
 

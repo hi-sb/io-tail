@@ -8,7 +8,9 @@ import (
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db"
 	"github.com/hi-sb/io-tail/core/db/mysql"
+	"github.com/hi-sb/io-tail/core/lock"
 	"github.com/hi-sb/io-tail/core/log"
+	"github.com/jinzhu/gorm"
 	"strings"
 )
 
@@ -123,7 +125,6 @@ func (*UserModel) GetInfoByPhone(phone string) *UserModel {
 	}
 	return user
 }
-
 // 修改操作后刷新用户缓存
 func (*UserModel) RefushCache(ID string) {
 	user := new(UserModel)
@@ -142,4 +143,43 @@ func (*UserModel) RefushCache(ID string) {
 
 	// 刷新group-member缓存
 	groupMemberMolde.RefreshCacheByMember(ID)
+}
+
+// 创建并加入缓存
+func (userModel *UserModel) CreateAndJoinCache() error {
+
+	// 注册
+	err := mysql.Transactional(func(tx *gorm.DB) error {
+		sync := lock.GetSync("register:" + userModel.MobileNumber)
+		err := sync.Lock()
+		if err != nil {
+			return err
+		}
+		defer sync.Unlock()
+		userModel.Bind()
+		return tx.Create(userModel).Error
+	})
+	if err != nil {
+		return err
+	}
+
+	// 加入缓存
+	// 缓存用户信息
+	data, err := json.Marshal(userModel)
+	if err == nil {
+		_, err = cache.RedisClient.HSet(constants.USER_BASE_INFO_REDIS_KEY, fmt.Sprintf(constants.USER_BASE_INFO_REDIS_PREFIX, userModel.ID), data).Result()
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+/** 初始化一个管理员 **/
+func (*UserModel) InitADMIN() {
+		admin := new(UserModel)
+		admin.UserRole = 1
+		admin.NickName = "admin"
+		admin.MobileNumber = "13888888888"
+		admin.CreateAndJoinCache()
 }
