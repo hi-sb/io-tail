@@ -111,6 +111,10 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 			return err
 		}
 
+		if addFReqModel.ReqId == "" || addFReqModel.ID == "" {
+			return syserr.NewParameterError("参数缺失")
+		}
+
 		// 更新添加状态 并持久化到MySQL And Redis
 		friendModel := new(model.FriendModel)
 		friendModel.ID = addFReqModel.ID
@@ -158,6 +162,9 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 		var friendReqs []model.FriendAddReqModel // 返回当前用户的好友列表
 
 		for _, id := range friendIDs {
+			if id == ""{
+				continue
+			}
 			user := userModelService.GetInfoById(id)
 			var friendReq model.FriendAddReqModel
 			friendReq.FriendID = user.ID
