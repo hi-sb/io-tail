@@ -1166,6 +1166,8 @@ abstract class MessageListener extends Thread {
 	//添加好友消息，格式为一个json
 	// Add friends
 	MessageTypeAddFriends string = "add-friends/json"
+    //心跳消息可以忽略
+	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 
 ```
 
@@ -1241,6 +1243,8 @@ abstract class MessageListener extends Thread {
 	//添加好友消息，格式为一个json
 	// Add friends
 	MessageTypeAddFriends string = "add-friends/json"
+    //心跳消息可以忽略
+	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 ```
 
 
@@ -1307,6 +1311,8 @@ abstract class MessageListener extends Thread {
 	//添加好友消息，格式为一个json
 	// Add friends
 	MessageTypeAddFriends string = "add-friends/json"
+    //心跳消息可以忽略
+	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 ```
 
 ##### 请求体
