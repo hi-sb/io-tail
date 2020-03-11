@@ -21,12 +21,9 @@ var userModelService = new(model.UserModel)
 
 //用token 获取用户信息
 func (*UserService) get(request *restful.Request, response *restful.Response) {
-	token := request.PathParameter("token")
-	JWT, err := auth.GetJWT(token)
+	userId := utils.Strval(request.Attribute("currentUserId"))
 	user := new(model.UserModel)
-	if err == nil {
-		err = mysql.DB.Where("id =?", JWT.ID).First(user).Error
-	}
+	err := mysql.DB.Where("id =?", userId).First(user).Error
 	rest.WriteEntity(user, err, response)
 }
 
@@ -134,38 +131,34 @@ func (*UserService) briefly(request *restful.Request, response *restful.Response
 }
 
 // 设置管理员
-func (*UserService) setAdmin(request *restful.Request, response *restful.Response){
+func (*UserService) setAdmin(request *restful.Request, response *restful.Response) {
 	err := func() error {
 		setInfo := new(model.SetAdmin)
-		err:= request.ReadEntity(setInfo)
+		err := request.ReadEntity(setInfo)
 		if err != nil {
 			return err
 		}
-		err = mysql.DB.Model(model.UserModel{}).Where("id = ?",setInfo.ID).UpdateColumn("user_role", setInfo.UserRole).Error
+		err = mysql.DB.Model(model.UserModel{}).Where("id = ?", setInfo.ID).UpdateColumn("user_role", setInfo.UserRole).Error
 		return err
 	}()
-	rest.WriteEntity(nil,err,response)
+	rest.WriteEntity(nil, err, response)
 }
 
-func (*UserService) initAdmin(request *restful.Request, response *restful.Response){
+func (*UserService) initAdmin(request *restful.Request, response *restful.Response) {
 	userModelService.InitADMIN()
 }
 
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/user")
 	webService.Route(webService.GET("/briefly/{id}").To(userService.briefly))
-	webService.Route(webService.GET("/{token}").To(userService.get))
+	webService.Route(webService.GET("").To(userService.get))
 	webService.Route(webService.POST("/login").To(userService.regOrlogin))
-	webService.Route(webService.PUT("/update").To(userService.regOrlogin))
+	webService.Route(webService.PUT("/update").To(userService.updateInfO))
 	webService.Route(webService.GET("/admin/init").To(userService.initAdmin))
 	binder.BindAdd()
 
-
 	adminBinder, adminWebService := rest.NewJsonWebServiceBinder("/admin/user")
-	adminWebService.Route(webService.PUT("/update").To(userService.regOrlogin))
+	adminWebService.Route(webService.PUT("/update").To(userService.updateInfO))
 	adminBinder.BindAdd()
 
-
-
 }
-
