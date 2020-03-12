@@ -1451,7 +1451,7 @@ abstract class MessageListener extends Thread {
     "Message": "OK",
     "Code": 200,
     //地址
-    "Body": "/20200312/4/0/8/b/430285b33cb548c088d0e01f4e80962a.jpg",
+    "Body": "http://148.70.231.222:6543/20200312/8/4/3/a/854b33ade0824f0aa50d523ea60f68fc.jpg",
     "Success": true
 }
 ```
