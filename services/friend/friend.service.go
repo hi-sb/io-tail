@@ -181,8 +181,21 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 			// 组装昵称
 			if user.ID == friendModel.UserID {
 				friendReq.Remark = friendModel.FtoURemark
+				friendReq.IsBlack = friendModel.IsBlack
 			}else if user.ID == friendModel.FriendID {
 				friendReq.Remark = friendModel.UtoFRemark
+				if friendModel.IsBlack == constants.IS_BLACK_U_PULL_F {
+					friendReq.IsBlack = constants.IS_BLACK_F_PULL_U
+				}
+				if friendModel.IsBlack == constants.IS_BLACK_F_PULL_U {
+					friendReq.IsBlack = constants.IS_BLACK_U_PULL_F
+				}
+				if friendModel.IsBlack == constants.IS_BLACK_EACH_OTHER {
+					friendReq.IsBlack = constants.IS_BLACK_EACH_OTHER
+				}
+				if friendModel.IsBlack == constants.IS_NOT_BLACK {
+					friendReq.IsBlack = constants.IS_NOT_BLACK
+				}
 			}
 
 			// 获取字符串首字母

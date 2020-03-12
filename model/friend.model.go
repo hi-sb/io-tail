@@ -73,6 +73,8 @@ type FriendAddReqModel struct {
 	Remark string
 	// 首字母
 	Initial string
+	// 拉黑关系
+	IsBlack string
 }
 
 
