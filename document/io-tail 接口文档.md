@@ -136,8 +136,9 @@
 ##### 请求参数
 ```
 {
-	"FriendID":"",  // 被添加好友的用户ID
-    "UtoFRemark":""  // 好友备注
+	"FriendID":"e52781a030724f9080e88f0847caf400",
+	"UtoFRemark":"444444",
+	"FrUReason":"我是***请通过下"
 }
 ```
 
@@ -164,11 +165,14 @@
     "Code": 200,
     "Body": [
         {
-            "ID": "728cb701761c482d8e73e571650e5929",
-            "FriendID": "bed8fb35819c473098d63aba5a8f71a8",
+            "ID": "00a8f708f445448a88af003195acfc4a",
+            "FriendID": "bc85bb92176248f8ba6566c2d1efc27a",
             "MobileNumber": "",
             "NickName": "",
-            "Avatar": ""
+            "Avatar": "",
+            "Remark": "我是Test请通过下",
+            "Initial": "",
+            "IsBlack": 3
         }
     ],
     "Success": true
@@ -215,12 +219,14 @@
     "Code": 200,
     "Body": [
         {
-            "FriendID": "bed8fb35819c473098d63aba5a8f71a8",
-            "MobileNumber": "191******",
-            "NickName": "191******",
-            "Avatar": "",
-            "Remark": "", // 备注
-            "Initial":""  // 首字母
+            "ID": "",
+            "FriendID": "016e487a13e5441786fa316880518cfe",
+            "MobileNumber": "",
+            "NickName": "",
+            "Avatar": "https:///header.png",
+            "Remark": "测试备注A",
+            "Initial": "C",
+            "IsBlack": 3    //0 互相拉黑  1:被拉黑  2：拉黑好友   3：关系正常
 
         }
     ],

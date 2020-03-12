@@ -28,6 +28,10 @@ type FriendModel struct {
 	// 好友备注
 	UtoFRemark string `gorm:"type:varchar(32)"`  // userid -> friendId 的备注
 	FtoURemark string `gorm:"type:varchar(32)`   // friendId --> userId 的备注
+
+	FrUReason string `gorm:"type:varchar(255)"` // friendId -> userid 添加原因
+	UrFReason string `gorm:"type:varchar(255)"`   // userid -> friendId 的备注
+
 }
 
 

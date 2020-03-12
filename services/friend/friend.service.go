@@ -87,10 +87,12 @@ func (*FriendService) getAddFriendReqList(request *restful.Request, response *re
 			userInfo := userModelService.GetInfoById(friendModel.UserID)
 			if userInfo != nil {
 				friendReq.ID = friendModel.ID
+				friendReq.Remark = friendModel.FrUReason
 				friendReq.FriendID = userInfo.ID
 				friendReq.Avatar = userInfo.Avatar
 				friendReq.MobileNumber = userInfo.MobileNumber
 				friendReq.NickName = userInfo.NickName
+				friendReq.IsBlack = 3
 				friendReqs = append(friendReqs, friendReq)
 			}
 		}
