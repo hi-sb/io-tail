@@ -1435,5 +1435,24 @@ abstract class MessageListener extends Thread {
 }
 ```
 
+### 7.1 对象存储接口
 
+> 测试地址:148.70.231.222:6543
+
+> POST /project/upload/{suffix}
+>
+> path 参数：suffix string 文件后缀 类似于jpg
+>
+> from body 参数 uploadFile 类型为文件类型
+
+##### 响应体：
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    //地址
+    "Body": "/20200312/4/0/8/b/430285b33cb548c088d0e01f4e80962a.jpg",
+    "Success": true
+}
+```
 
