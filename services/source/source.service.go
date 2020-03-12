@@ -214,8 +214,11 @@ func (sourceService *SourceService) SendMessage(fromId string, toId string, send
 		return syserr.NewSourceNotFound("没有这样的群或用户")
 	}
 	defer messageFile.Close()
+	fromUser := new(model.UserModel).GetInfoById(fromId)
 	message := body.Message{
 		FormId:      fromId,
+		NickName:    fromUser.NickName,
+		Avatar:      fromUser.Avatar,
 		SendTime:    sendRequest.SendTime,
 		Body:        sendRequest.Body,
 		ContentType: sendRequest.ContentType,

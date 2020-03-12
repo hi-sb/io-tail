@@ -1271,6 +1271,10 @@ abstract class MessageListener extends Thread {
 {
     	// form user id
     	FormId:"发送者的id",
+        //昵称
+        NickName: "",
+        // 头像
+        Avatar :"string",
     	// send time
     	SendTime:"发送时间",
     	// message body

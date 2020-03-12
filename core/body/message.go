@@ -31,6 +31,10 @@ const (
 type Message struct {
 	// form user id
 	FormId string
+	//昵称
+	NickName string
+	// 头像
+	Avatar string
 	// send time
 	SendTime int64
 	// message body
