@@ -167,7 +167,7 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 			}
 			user := userModelService.GetInfoById(id)
 			var friendReq model.FriendAddReqModel
-			friendReq.FriendID = user.ID
+			friendReq.FriendID = id
 			friendReq.Avatar = user.Avatar
 			friendReq.MobileNumber = user.MobileNumber
 			friendReq.NickName = user.NickName
@@ -179,23 +179,12 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 				return nil,err
 			}
 			// 组装昵称
-			if user.ID == friendModel.UserID {
+			if id== friendModel.UserID {
 				friendReq.Remark = friendModel.FtoURemark
-				friendReq.IsBlack = friendModel.IsBlack
-			}else if user.ID == friendModel.FriendID {
+				friendReq.IsBlack = friendAddReqModelService.ValidateBlackResult(userId,id,userId,friendModel.IsBlack)
+			}else if id == friendModel.FriendID {
 				friendReq.Remark = friendModel.UtoFRemark
-				if friendModel.IsBlack == constants.IS_BLACK_U_PULL_F {
-					friendReq.IsBlack = constants.IS_BLACK_F_PULL_U
-				}
-				if friendModel.IsBlack == constants.IS_BLACK_F_PULL_U {
-					friendReq.IsBlack = constants.IS_BLACK_U_PULL_F
-				}
-				if friendModel.IsBlack == constants.IS_BLACK_EACH_OTHER {
-					friendReq.IsBlack = constants.IS_BLACK_EACH_OTHER
-				}
-				if friendModel.IsBlack == constants.IS_NOT_BLACK {
-					friendReq.IsBlack = constants.IS_NOT_BLACK
-				}
+				friendReq.IsBlack = friendAddReqModelService.ValidateBlackResult(id,userId,userId,friendModel.IsBlack)
 			}
 
 			// 获取字符串首字母

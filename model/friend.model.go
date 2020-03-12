@@ -74,7 +74,7 @@ type FriendAddReqModel struct {
 	// 首字母
 	Initial string
 	// 拉黑关系
-	IsBlack string
+	IsBlack int
 }
 
 
@@ -209,6 +209,38 @@ func (*FriendModel) CheckFriendBlack(userId string,friendId string) bool {
 		}
 	}
 	return false
+}
+
+// 黑名单转码 前端使用  0 互相拉黑  1:被拉黑  2：拉黑好友   3：关系正常
+func (*FriendAddReqModel) ValidateBlackResult(userId string,friendId string,currentUserId string,isBlack string) int {
+
+	if userId == currentUserId {
+		if isBlack == constants.IS_BLACK_U_PULL_F {
+			return 2
+		}
+		if isBlack == constants.IS_BLACK_F_PULL_U {
+			return 1
+		}
+	}
+
+	if friendId == currentUserId {
+		if isBlack == constants.IS_BLACK_U_PULL_F {
+			return 1
+		}
+		if isBlack == constants.IS_BLACK_F_PULL_U {
+			return 2
+		}
+
+	}
+
+	if isBlack == constants.IS_BLACK_EACH_OTHER {
+		return 0
+	}
+	if isBlack == constants.IS_NOT_BLACK {
+		return 3
+	}
+
+	return 3
 }
 
 
