@@ -262,22 +262,34 @@ func (*FriendAddReqModel) GetFriendIDsByCurrentId(currentId string) ([]string,er
 		if err != nil {
 			return nil,err
 		}
+		userIdKEY := fmt.Sprintf(constants.FRIEND_REDIS_PREFIX,currentId)
 		for _,f := range friendModels {
 			if f.UserID == currentId {
 				if f.IsAgree != constants.NOT_AGREE_ADD {
 					friendIDs = append(friendIDs, f.FriendID)
+					cache.RedisClient.SAdd(userIdKEY,f.FriendID)
 				}
 			}
 
 			if f.FriendID == currentId {
 				if f.IsAgree != constants.NOT_AGREE_ADD {
 					friendIDs = append(friendIDs, f.UserID)
+					cache.RedisClient.SAdd(userIdKEY,f.UserID)
 				}
 			}
 		}
 	}
 
-	// TODO 写缓存
+
+
+
+
+
+
+
+
+
+
 	return friendIDs,nil
 }
 

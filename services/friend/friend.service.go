@@ -175,7 +175,7 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 			friendReq.MobileNumber = user.MobileNumber
 			friendReq.NickName = user.NickName
 
-			// 查询昵称
+			// 查询昵称  //TODO 改进 查缓存
 			friendModel := new(model.FriendModel)
 			err = mysql.DB.Where("(user_id =? and friend_id = ?) or (user_id =? and  friend_id= ?)",userId,user.ID,user.ID,userId).First(friendModel).Error
 			if err != nil {
