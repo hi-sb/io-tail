@@ -155,7 +155,8 @@ func (this *FriendService) getFriendList(request *restful.Request, response *res
 	friendList,err := func() (*[]model.FriendAddReqModel,error){
 		userId := utils.Strval(request.Attribute("currentUserId"))
 		// 从redis获取当前用户的好友列表
-		friendIDs, err := cache.RedisClient.SMembers(fmt.Sprintf(constants.FRIEND_REDIS_PREFIX,userId)).Result()
+		// friendIDs, err := cache.RedisClient.SMembers(fmt.Sprintf(constants.FRIEND_REDIS_PREFIX,userId)).Result()
+		friendIDs, err := friendAddReqModelService.GetFriendIDsByCurrentId(userId)
 		if err != nil {
 			return nil,err
 		}

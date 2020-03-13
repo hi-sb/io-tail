@@ -248,3 +248,37 @@ func (*FriendAddReqModel) ValidateBlackResult(userId string,friendId string,curr
 }
 
 
+// 获取好友列表
+func (*FriendAddReqModel) GetFriendIDsByCurrentId(currentId string) ([]string,error){
+	// read cache
+	friendIDs, err := cache.RedisClient.SMembers(fmt.Sprintf(constants.FRIEND_REDIS_PREFIX,currentId)).Result()
+	if err != nil {
+		return nil,err
+	}
+	if len(friendIDs) == 0 {
+		// read db
+		var friendModels []FriendModel
+		err = mysql.DB.Where("user_id =? or friend_id = ? ",currentId,currentId).Find(&friendModels).Error
+		if err != nil {
+			return nil,err
+		}
+		for _,f := range friendModels {
+			if f.UserID == currentId {
+				if f.IsAgree != constants.NOT_AGREE_ADD {
+					friendIDs = append(friendIDs, f.FriendID)
+				}
+			}
+
+			if f.FriendID == currentId {
+				if f.IsAgree != constants.NOT_AGREE_ADD {
+					friendIDs = append(friendIDs, f.UserID)
+				}
+			}
+		}
+	}
+
+	// TODO 写缓存
+	return friendIDs,nil
+}
+
+
