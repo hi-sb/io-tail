@@ -42,7 +42,7 @@ func (*PermissionService) CheckGroupWritePermission(jwt *auth.JWT, name string) 
 		return syserr.NewBaseErr("当前群不可用")
 	}
 	isMemberIsTalk := groupMemberModel.CheckMemberIsTalk(name, jwt.ID)
-	if isMemberIsTalk {
+	if !isMemberIsTalk {
 		return syserr.NewBaseErr("您已经被禁言")
 	}
 	return nil
