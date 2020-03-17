@@ -1423,6 +1423,114 @@ abstract class MessageListener extends Thread {
 }
 ```
 
+### 5.6 获取私有消息记录
+##### URI
+
+> POST /message-backup/private/{fId}/{sendTime}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：
+>
+> fId string 好友的id
+>
+>sendTime string 拉取小于该时间戳的消息记录
+>
+
+##### 响应体：
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "Page": 0,
+        "PageSize": 50,
+        "Total": 11,
+        "Body": [
+            {
+                "ID": "e5b0c5cf8838483697d7a4b6ff26716e",
+                "CreatedAt": "2020-03-17T16:18:42+08:00",
+                "UpdatedAt": "2020-03-17T16:18:42+08:00",
+                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
+                "ToId": "356db24c1a9448f38180fcc2db450154",
+                "NickName": "13816881681",
+                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
+                "SendTime": 1584433122276,
+                "Body": "http://148.70.231.222:6543/20200317/c/4/4/3/c2484233a4ec450d96d66a93ce1fbd39.png",
+                "ContentType": "img/url"
+            },
+            {
+                "ID": "3bedf1e7cb424d55ab1cdd1d901953b9",
+                "CreatedAt": "2020-03-17T16:18:34+08:00",
+                "UpdatedAt": "2020-03-17T16:18:34+08:00",
+                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
+                "ToId": "356db24c1a9448f38180fcc2db450154",
+                "NickName": "13816881681",
+                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
+                "SendTime": 1584433114301,
+                "Body": "再试一下",
+                "ContentType": "text/text"
+            }
+        ]
+    },
+    "Success": true
+}
+```
+
+### 5.7 获取群消息记录
+##### URI
+
+> POST /message-backup/group/{groupId}/{sendTime}
+
+> 请求头 AUTH_TOKEN : TOKEN
+
+> path 参数：
+>
+> groupId string 群的id
+>
+>sendTime string 拉取小于该时间戳的消息记录
+>
+
+##### 响应体：
+```
+{
+    "Message": "OK",
+    "Code": 200,
+    "Body": {
+        "Page": 0,
+        "PageSize": 50,
+        "Total": 11,
+        "Body": [
+            {
+                "ID": "e5b0c5cf8838483697d7a4b6ff26716e",
+                "CreatedAt": "2020-03-17T16:18:42+08:00",
+                "UpdatedAt": "2020-03-17T16:18:42+08:00",
+                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
+                "ToId": "356db24c1a9448f38180fcc2db450154",
+                "NickName": "13816881681",
+                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
+                "SendTime": 1584433122276,
+                "Body": "http://148.70.231.222:6543/20200317/c/4/4/3/c2484233a4ec450d96d66a93ce1fbd39.png",
+                "ContentType": "img/url"
+            },
+            {
+                "ID": "3bedf1e7cb424d55ab1cdd1d901953b9",
+                "CreatedAt": "2020-03-17T16:18:34+08:00",
+                "UpdatedAt": "2020-03-17T16:18:34+08:00",
+                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
+                "ToId": "356db24c1a9448f38180fcc2db450154",
+                "NickName": "13816881681",
+                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
+                "SendTime": 1584433114301,
+                "Body": "再试一下",
+                "ContentType": "text/text"
+            }
+        ]
+    },
+    "Success": true
+}
+```
+
 ### 6.1 按用户id获取用户简要信息（昵称、头像）
 ##### URI
 
