@@ -26,6 +26,7 @@ var (
 	filePathAdapter   = abstract.NewDefaultFilePathAdapter()
 	readAndWrite      = abstract.NewDefaultReadAndWriteAdapter()
 	permissionService = new(PermissionService)
+	messageBackup     = new(model.MessageBackup)
 )
 
 //
@@ -230,9 +231,22 @@ func (sourceService *SourceService) SendMessage(fromId string, toId string, send
 		return err
 	}
 	_, err = messageFile.WriteString(body)
+	// 写入消息正常
+	if err == nil {
+		messageBackupModel := model.MessageBackup{
+			FormId:      message.FormId,
+			ToId:        toId,
+			NickName:    message.NickName,
+			Avatar:      message.Avatar,
+			SendTime:    message.SendTime,
+			Body:        message.Body,
+			ContentType: message.ContentType,
+		}
+		//异步写入
+		messageBackup.AsyncSave(messageBackupModel)
+	}
 	return err
 }
-
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/topic")
 	webService.Route(webService.GET("offset/{source}").To(sourceService.offset))

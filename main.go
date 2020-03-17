@@ -11,6 +11,7 @@ import (
 	_ "github.com/hi-sb/io-tail/filter"
 	_ "github.com/hi-sb/io-tail/services/friend"
 	_ "github.com/hi-sb/io-tail/services/group"
+	_ "github.com/hi-sb/io-tail/services/messageBackup"
 	_ "github.com/hi-sb/io-tail/services/mini"
 	_ "github.com/hi-sb/io-tail/services/sms"
 	_ "github.com/hi-sb/io-tail/services/source"
@@ -22,11 +23,11 @@ import (
 // log logo
 func printASCIILogo() {
 	logo := `
-			 ___   _______    _______  _______  ___   ___     
-			|   | |       |  |       ||   _   ||   | |   |    
-			|   | |   _   |  |_     _||  |_|  ||   | |   |    
-			|   | |  | |  |    |   |  |       ||   | |   |    
-			|   | |  |_|  |    |   |  |       ||   | |   |___ 
+			 ___   _______    _______  _______  ___   ___
+			|   | |       |  |       ||   _   ||   | |   |
+			|   | |   _   |  |_     _||  |_|  ||   | |   |
+			|   | |  | |  |    |   |  |       ||   | |   |
+			|   | |  |_|  |    |   |  |       ||   | |   |___
 			|   | |       |    |   |  |   _   ||   | |       |
 			|___| |_______|    |___|  |__| |__||___| |_______|
 	`
