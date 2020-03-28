@@ -21,10 +21,14 @@ const (
 	MessageTypeUrlImg string = "img/url"
 	// sys notify message
 	MessageTypeNotify string = "notify/text"
-	// Add friends
-	MessageTypeAddFriends string = "add-friends/json"
+	// Add friend
+	MessageTypeAddFriend string = "add-friend/json"
 	//heartbeat
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
+	// add to group
+	MessageTypeAddToGroup string ="add-to-group/json"
+	// expel group
+	MessageTypeExpelGroup string ="expel-group/json"
 )
 
 // message
@@ -70,10 +74,14 @@ func (*Message) GetMessageContentTypeNum(contentType string) (int, error) {
 		return 5, nil
 	case MessageTypeNotify:
 		return 6, nil
-	case MessageTypeAddFriends:
+	case MessageTypeAddFriend:
 		return 7, nil
 	case MessageTypeHeartbeat:
 		return 8, nil
+	case MessageTypeAddToGroup:
+		return 9,nil
+	case MessageTypeExpelGroup:
+		return 10,nil
 	default:
 		return -1, errors.New("非法的 ContentType")
 	}

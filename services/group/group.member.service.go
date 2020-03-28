@@ -3,17 +3,21 @@ package group
 import (
 	"bytes"
 	"container/list"
+	"encoding/json"
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/hi-sb/io-tail/common/constants"
+	"github.com/hi-sb/io-tail/core/body"
 	"github.com/hi-sb/io-tail/core/cache"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
 	"github.com/hi-sb/io-tail/model"
+	"github.com/hi-sb/io-tail/services/source"
 	"github.com/hi-sb/io-tail/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type GroupMemberService struct {
@@ -22,6 +26,9 @@ type GroupMemberService struct {
 var groupMemberService = new(GroupMemberService)
 var userModelService = new(model.UserModel)
 var groupMemberModelService = new(model.GroupMemberModel)
+
+// 消息通知
+var message = new(source.SourceService)
 
 // 邀请新用户加入群
 func (this *GroupMemberService) newMemberJoin(request *restful.Request, response *restful.Response) {
@@ -68,6 +75,15 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 				gmd.Avatar = user.Avatar
 				gmd.NickName = user.NickName
 				invitationUsers = append(invitationUsers, *gmd)
+				//向用户推送邀请消息
+				addGroupStringByte, _ := json.Marshal(gmd)
+				addGroupSendRequest := model.SendRequest{
+					SendTime:    time.Now().Unix(),
+					Body:        string(addGroupStringByte),
+					ContentType: body.MessageTypeAddToGroup,
+				}
+				//发送踢人消息
+				_, _ = message.SendMessage("-1", user.ID, &addGroupSendRequest)
 			}
 		}
 		res.InvitationUserArray = &invitationUsers
@@ -110,6 +126,14 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 		// 删除群成员  redis db
 		cache.RedisClient.HDel(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX,rmModel.GroupID),rmModel.UserID)
 		mysql.DB.Where("group_id = ? and group_member_id = ?",rmModel.GroupID,rmModel.UserID).Delete(model.GroupMemberModel{})
+		expelGroupStringByte, _ := json.Marshal(rmModel)
+		expelGroupSendRequest := model.SendRequest{
+			SendTime:    time.Now().Unix(),
+			Body:        string(expelGroupStringByte),
+			ContentType: body.MessageTypeExpelGroup,
+		}
+		//发送踢人消息
+		_, _ = message.SendMessage("-1", rmModel.UserID, &expelGroupSendRequest)
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)
