@@ -29,6 +29,8 @@ const (
 
 // message
 type Message struct {
+	//message id
+	MessageId string
 	// form user id
 	FormId string
 	//昵称
