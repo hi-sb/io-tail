@@ -56,7 +56,7 @@ func (sourceService *SourceService) privateSourceListen(request *restful.Request
 			return "", "", err
 		}
 		tell := topic.NewDefaultTell(offsetInt)
-		return JWT.AtNum, JWT.ID, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
+		return JWT.ID, JWT.ID, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -90,7 +90,7 @@ func (sourceService *SourceService) publicSourceListen(request *restful.Request,
 			fmt.Println(err)
 			return "", "", err
 		}
-		return JWT.AtNum, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
+		return JWT.ID, source, tell.TellMessage(topic.TellChan{Error: errChan, Reader: readChan}, path, request.Request)
 	}()
 	sourceService.tellChan(openid, source, errChan, readChan, response, err)
 }
@@ -115,8 +115,11 @@ func (sourceService *SourceService) tellChan(name string, source string, errChan
 				fmt.Println(err)
 				continue
 			}
-			key := fmt.Sprintf("%s_offset_from_%s", name, source)
-			cache.RedisClient.Set(key, message.Offset, 0)
+			// 心跳消息不更新offset
+			if message.ContentType != body.MessageTypeHeartbeat{
+				key := fmt.Sprintf("%s_offset_from_%s", name, source)
+				cache.RedisClient.Set(key, message.Offset, 0)
+			}
 			_, _ = fmt.Fprint(response.ResponseWriter, data)
 			flusher.Flush()
 		}
@@ -134,7 +137,7 @@ func (sourceService *SourceService) offset(request *restful.Request, response *r
 			return 0, err
 		}
 		source := request.PathParameter("source")
-		key := fmt.Sprintf("%s_offset_from_%s", JWT.AtNum, source)
+		key := fmt.Sprintf("%s_offset_from_%s", JWT.ID, source)
 		value, _ := cache.RedisClient.Get(key).Result()
 		if value == "" {
 			value = "0"
