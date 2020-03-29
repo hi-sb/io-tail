@@ -37,6 +37,11 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 			return nil, err
 		}
 
+		mems := strings.Split(createGroup.GroupMembers, ",")
+		if len(mems) <= 2 {
+			return nil,syserr.NewParameterError("群成员必须大于2个人")
+		}
+
 		/**
 		创建群流程开始  1.创建主群信息  2.写入成员
 		*/
@@ -115,7 +120,7 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 		if !(groupMemberModelService.CheckGroupRole(groupModel.ID, utils.Strval(utils.Strval(request.Attribute("currentUserId"))), false)) {
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
-		
+
 		if groupModel.GroupAnnouncement != ""  {
 			err = mysql.DB.Model(groupModel).UpdateColumn("group_announcement", groupModel.GroupAnnouncement).Error
 		}
