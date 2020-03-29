@@ -104,11 +104,19 @@ func (*GroupService) updateGroupNotice(request *restful.Request, response *restf
 		if !(groupMemberModelService.CheckGroupRole(groupModel.ID, utils.Strval(utils.Strval(request.Attribute("currentUserId"))), false)) {
 			return syserr.NewPermissionErr("对不起，您没有权限操作")
 		}
+		
+		if groupModel.GroupAnnouncement != ""  {
+			err = mysql.DB.Model(groupModel).UpdateColumn("group_announcement", groupModel.GroupAnnouncement).Error
+		}
 
-		err = mysql.DB.Model(groupModel).UpdateColumn("group_announcement", groupModel.GroupAnnouncement).Error
+		if  groupModel.GroupName != ""{
+			err = mysql.DB.Model(groupModel).UpdateColumn("group_name", groupModel.GroupName).Error
+		}
+
 		if err != nil {
 			return err
 		}
+
 
 		groupModelService.UpdateGroupInfoCache(groupModel.ID)
 
@@ -232,7 +240,7 @@ func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/group")
 	webService.Route(webService.POST("").To(groupService.createGroup))
 	webService.Route(webService.GET("/{groupID}").To(groupService.findOne))
-	webService.Route(webService.PUT("/global/notice").To(groupService.updateGroupNotice))
+	webService.Route(webService.PUT("").To(groupService.updateGroupNotice))
 	webService.Route(webService.PUT("/global/forbidden/words").To(groupService.updateGroupForbiddenStatus))
 	webService.Route(webService.DELETE("{groupID}").To(groupService.delGroupById))
 	webService.Route(webService.GET("/check/{groupID}").To(groupService.checkDialogueStatus))
