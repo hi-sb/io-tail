@@ -117,7 +117,7 @@ func (sourceService *SourceService) tellChan(name string, source string, errChan
 				continue
 			}
 			// 心跳消息不更新offset
-			if message.ContentType != body.MessageTypeHeartbeat{
+			if message.ContentType != body.MessageTypeHeartbeat {
 				key := fmt.Sprintf("%s_offset_from_%s", name, source)
 				cache.RedisClient.Set(key, message.Offset, 0)
 			}
@@ -152,21 +152,21 @@ func (sourceService *SourceService) offset(request *restful.Request, response *r
 //也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
 //会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
 func (sourceService *SourceService) send(request *restful.Request, response *restful.Response) {
-	messageId,err := func() (string,error) {
+	messageId, err := func() (string, error) {
 		sendRequest := new(model.SendRequest)
 		err := request.ReadEntity(sendRequest)
 		if err != nil {
-			return "",syserr.NewBadRequestErr(err.Error())
+			return "", syserr.NewBadRequestErr(err.Error())
 		}
 		token := request.HeaderParameter(auth.AUTH_HEADER)
 		JWT, err := auth.GetJWT(token)
 		if err != nil {
-			return "",err
+			return "", err
 		}
 		source := request.PathParameter("source")
 		err = permissionService.CheckWritePermission(JWT, source)
 		if err != nil {
-			return "",err
+			return "", err
 		}
 		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
@@ -177,38 +177,38 @@ func (sourceService *SourceService) send(request *restful.Request, response *res
 //也就是往某个话题文件写入消息，这个时候需要验证权限，当向一个私有话题发送消息的时候
 //会验证是否是对方的好友，如果是，那么则具有写入话题的权限。而共有话题，则会验证该用户是否加入了该群。
 func (sourceService *SourceService) groupSend(request *restful.Request, response *restful.Response) {
-	messageId,err := func() (string,error) {
+	messageId, err := func() (string, error) {
 		sendRequest := new(model.SendRequest)
 		err := request.ReadEntity(sendRequest)
 		if err != nil {
-			return "",syserr.NewBadRequestErr(err.Error())
+			return "", syserr.NewBadRequestErr(err.Error())
 		}
 		token := request.HeaderParameter(auth.AUTH_HEADER)
 		JWT, err := auth.GetJWT(token)
 		if err != nil {
-			return "",err
+			return "", err
 		}
 		source := request.PathParameter("source")
 		err = permissionService.CheckGroupWritePermission(JWT, source)
 		if err != nil {
-			return "",err
+			return "", err
 		}
 		return sourceService.SendMessage(JWT.ID, source, sendRequest)
 	}()
 	rest.WriteEntity(messageId, err, response)
 }
 
-func (sourceService *SourceService) SendMessage(fromId string, toId string, sendRequest *model.SendRequest) (string,error) {
+func (sourceService *SourceService) SendMessage(fromId string, toId string, sendRequest *model.SendRequest) (string, error) {
 	path, err := filePathAdapter.Handle(toId)
 	if err != nil {
 		err = syserr.NewSysErr(err.Error())
 		fmt.Println(err)
-		return "",err
+		return "", err
 	}
 	// check content type
 	err = new(body.Message).CheckContentType(sendRequest.ContentType)
 	if err != nil {
-		return "",syserr.NewContentTypeErr(err.Error())
+		return "", syserr.NewContentTypeErr(err.Error())
 	}
 	if sendRequest.SendTime == 0 {
 		sendRequest.SendTime = time.Now().UnixNano() / 1e6
@@ -216,25 +216,29 @@ func (sourceService *SourceService) SendMessage(fromId string, toId string, send
 	messageFile, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println(err)
-		return "",syserr.NewSourceNotFound("没有这样的群或用户")
+		return "", syserr.NewSourceNotFound("没有这样的群或用户")
 	}
 	defer messageFile.Close()
-	fromUser := new(model.UserModel).GetInfoById(fromId)
 	messageId := utils.GetID()
 	message := body.Message{
-		MessageId:messageId,
+		MessageId:   messageId,
 		FormId:      fromId,
-		NickName:    fromUser.NickName,
-		Avatar:      fromUser.Avatar,
 		SendTime:    sendRequest.SendTime,
 		Body:        sendRequest.Body,
 		ContentType: sendRequest.ContentType,
+	}
+	//未知用户 不设置
+	//如系统通知
+	fromUser := new(model.UserModel).GetInfoById(fromId)
+	if fromUser != nil {
+		message.NickName = fromUser.NickName
+		message.Avatar =fromUser.Avatar
 	}
 	body, err := readAndWrite.Encoding(&message)
 	if err != nil {
 		err = syserr.NewSysErr(err.Error())
 		fmt.Println(err)
-		return "",err
+		return "", err
 	}
 	_, err = messageFile.WriteString(body)
 	// 写入消息正常
@@ -251,7 +255,7 @@ func (sourceService *SourceService) SendMessage(fromId string, toId string, send
 		//异步写入
 		messageBackup.AsyncSave(messageBackupModel)
 	}
-	return messageId,err
+	return messageId, err
 }
 func init() {
 	binder, webService := rest.NewJsonWebServiceBinder("/topic")
