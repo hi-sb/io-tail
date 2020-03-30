@@ -1166,6 +1166,10 @@ abstract class MessageListener extends Thread {
 	MessageTypeAddFriends string = "add-friends/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
+	//被邀请 入群通知消息
+	MessageTypeAddToGroup string ="add-to-group/json"
+	//被踢出群通知消息
+	MessageTypeExpelGroup string ="expel-group/json"
 
 ```
 
@@ -1243,6 +1247,10 @@ abstract class MessageListener extends Thread {
 	MessageTypeAddFriends string = "add-friends/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
+	//被邀请 入群通知消息
+	MessageTypeAddToGroup string ="add-to-group/json"
+	//被踢出群通知消息
+	MessageTypeExpelGroup string ="expel-group/json"
 ```
 
 
@@ -1315,6 +1323,10 @@ abstract class MessageListener extends Thread {
 	MessageTypeAddFriends string = "add-friends/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
+	//被邀请 入群通知消息
+	MessageTypeAddToGroup string ="add-to-group/json"
+	//被踢出群通知消息
+	MessageTypeExpelGroup string ="expel-group/json"
 ```
 
 ##### 请求体
@@ -1375,6 +1387,10 @@ abstract class MessageListener extends Thread {
 	//heartbeat 心跳消息
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
+	//被邀请 入群通知消息
+	MessageTypeAddToGroup string ="add-to-group/json"
+	//被踢出群通知消息
+	MessageTypeExpelGroup string ="expel-group/json"
 ```
 
 ##### 请求体
