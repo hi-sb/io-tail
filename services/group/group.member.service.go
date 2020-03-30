@@ -82,8 +82,8 @@ func (this *GroupMemberService) newMemberJoin(request *restful.Request, response
 					Body:        string(addGroupStringByte),
 					ContentType: body.MessageTypeAddToGroup,
 				}
-				//发送踢人消息
-				_, _ = message.SendMessage("-1", user.ID, &addGroupSendRequest)
+				//发送邀请加入消息
+				go message.SendMessage("-1", user.ID, &addGroupSendRequest)
 			}
 		}
 		res.InvitationUserArray = &invitationUsers
@@ -126,14 +126,18 @@ func (*GroupMemberService) removeMember(request *restful.Request, response *rest
 		// 删除群成员  redis db
 		cache.RedisClient.HDel(fmt.Sprintf(constants.GROUP_MEMBER_INFO_REDIS_PREFIX,rmModel.GroupID),rmModel.UserID)
 		mysql.DB.Where("group_id = ? and group_member_id = ?",rmModel.GroupID,rmModel.UserID).Delete(model.GroupMemberModel{})
-		expelGroupStringByte, _ := json.Marshal(rmModel)
+		removeGroupMemberModel:=model.GroupMemberModel{
+			GroupID:rmModel.GroupID,
+			GroupMemberID:rmModel.UserID,
+		}
+		expelGroupStringByte, _ := json.Marshal(removeGroupMemberModel)
 		expelGroupSendRequest := model.SendRequest{
 			SendTime:    time.Now().Unix(),
 			Body:        string(expelGroupStringByte),
 			ContentType: body.MessageTypeExpelGroup,
 		}
 		//发送踢人消息
-		_, _ = message.SendMessage("-1", rmModel.UserID, &expelGroupSendRequest)
+		go message.SendMessage("-1", rmModel.UserID, &expelGroupSendRequest)
 		return nil
 	}()
 	rest.WriteEntity(nil, err, response)

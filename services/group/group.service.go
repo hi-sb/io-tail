@@ -1,7 +1,9 @@
 package group
 
 import (
+	"encoding/json"
 	"github.com/emicklei/go-restful"
+	"github.com/hi-sb/io-tail/core/body"
 	"github.com/hi-sb/io-tail/core/db/mysql"
 	"github.com/hi-sb/io-tail/core/rest"
 	"github.com/hi-sb/io-tail/core/syserr"
@@ -9,6 +11,7 @@ import (
 	"github.com/hi-sb/io-tail/utils"
 	"github.com/jinzhu/gorm"
 	"strings"
+	"time"
 )
 
 type GroupService struct {
@@ -67,6 +70,14 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 				if err != nil {
 					return err
 				}
+				addGroupStringByte, _ := json.Marshal(groupMember)
+				addGroupSendRequest := model.SendRequest{
+					SendTime:    time.Now().Unix(),
+					Body:        string(addGroupStringByte),
+					ContentType: body.MessageTypeAddToGroup,
+				}
+				//发送踢人消息
+				go message.SendMessage("-1", groupMember.GroupMemberID, &addGroupSendRequest)
 			}
 
 			// 持久化群
