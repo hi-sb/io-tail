@@ -385,23 +385,16 @@
 }
 ```
 
-### 3.2 更新群公告
+### 3.2 更新群信息（名称and公告）
 ##### URI
-> PUT /group/global/notice
-
+> PUT /group
 > 请求头 AUTH_TOKEN : TOKEN
 
 ```
 {
-	"GroupName":"", // 默认名称 群聊(成员数)
-	"GroupAnnouncement": "群公告",
-	"GroupMembers":"1111,2222,3333"   // 成员ID（当前用户除外）
-}
-```
 
-```
-{
 	"ID":"be43b195a3bb4eb5abe73f246f8d9c47",
+    "GroupName":"", // 默认名称 群聊(成员数)
 	"GroupAnnouncement":"测试更新群公告1333311"
 }
 ```
@@ -432,7 +425,7 @@
             "GroupName": "群聊(4)",
             "GroupAnnouncement": "群公告",
             "GreateUserID": "e52781a030724f9080e88f0847caf400",
-            "GroupChatStatus": 1
+            "GroupChatStatus": 1  // 0:全体禁言  1:正常
         },
         "GroupMemberDetail": [
             {
@@ -442,7 +435,7 @@
                 "GroupID": "15be653fb4b64bb1941739c7b8673e5a",
                 "GroupMemberID": "23a463f1e3f5459ea252d3817682f2d9",
                 "GroupMemberNickName": "测试昵称",
-                "GroupMemberRole": 2,
+                "GroupMemberRole": 2,  // 0 普通成员   1：创建者   2：管理员
                 "IsForbidden": 1,   // 是否禁言  0: 正常发言 1:禁言
                 "MobileNumber": "",
                 "NickName": "",
@@ -898,7 +891,6 @@
     "Success": true
 }
 ```
-
 
 
 
@@ -1404,6 +1396,7 @@ abstract class MessageListener extends Thread {
 }
 
 ```
+
 ### 5.5 获取自己在指定话题的监听位置，也就是offset
 ##### URI
 
@@ -1419,114 +1412,6 @@ abstract class MessageListener extends Thread {
     "Message": "OK",
     "Code": 200,
     "Body":167616,//offset
-    "Success": true
-}
-```
-
-### 5.6 获取私有消息记录
-##### URI
-
-> POST /message-backup/private/{fId}/{sendTime}
-
-> 请求头 AUTH_TOKEN : TOKEN
-
-> path 参数：
->
-> fId string 好友的id
->
->sendTime string 拉取小于该时间戳的消息记录
->
-
-##### 响应体：
-```
-{
-    "Message": "OK",
-    "Code": 200,
-    "Body": {
-        "Page": 0,
-        "PageSize": 50,
-        "Total": 11,
-        "Body": [
-            {
-                "ID": "e5b0c5cf8838483697d7a4b6ff26716e",
-                "CreatedAt": "2020-03-17T16:18:42+08:00",
-                "UpdatedAt": "2020-03-17T16:18:42+08:00",
-                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
-                "ToId": "356db24c1a9448f38180fcc2db450154",
-                "NickName": "13816881681",
-                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
-                "SendTime": 1584433122276,
-                "Body": "http://148.70.231.222:6543/20200317/c/4/4/3/c2484233a4ec450d96d66a93ce1fbd39.png",
-                "ContentType": "img/url"
-            },
-            {
-                "ID": "3bedf1e7cb424d55ab1cdd1d901953b9",
-                "CreatedAt": "2020-03-17T16:18:34+08:00",
-                "UpdatedAt": "2020-03-17T16:18:34+08:00",
-                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
-                "ToId": "356db24c1a9448f38180fcc2db450154",
-                "NickName": "13816881681",
-                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
-                "SendTime": 1584433114301,
-                "Body": "再试一下",
-                "ContentType": "text/text"
-            }
-        ]
-    },
-    "Success": true
-}
-```
-
-### 5.7 获取群消息记录
-##### URI
-
-> POST /message-backup/group/{groupId}/{sendTime}
-
-> 请求头 AUTH_TOKEN : TOKEN
-
-> path 参数：
->
-> groupId string 群的id
->
->sendTime string 拉取小于该时间戳的消息记录
->
-
-##### 响应体：
-```
-{
-    "Message": "OK",
-    "Code": 200,
-    "Body": {
-        "Page": 0,
-        "PageSize": 50,
-        "Total": 11,
-        "Body": [
-            {
-                "ID": "e5b0c5cf8838483697d7a4b6ff26716e",
-                "CreatedAt": "2020-03-17T16:18:42+08:00",
-                "UpdatedAt": "2020-03-17T16:18:42+08:00",
-                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
-                "ToId": "356db24c1a9448f38180fcc2db450154",
-                "NickName": "13816881681",
-                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
-                "SendTime": 1584433122276,
-                "Body": "http://148.70.231.222:6543/20200317/c/4/4/3/c2484233a4ec450d96d66a93ce1fbd39.png",
-                "ContentType": "img/url"
-            },
-            {
-                "ID": "3bedf1e7cb424d55ab1cdd1d901953b9",
-                "CreatedAt": "2020-03-17T16:18:34+08:00",
-                "UpdatedAt": "2020-03-17T16:18:34+08:00",
-                "FormId": "3c4d23bca1d84e7abdc518d14f7dba30",
-                "ToId": "356db24c1a9448f38180fcc2db450154",
-                "NickName": "13816881681",
-                "Avatar": "https://cirlcle-test.oss-cn-chengdu.aliyuncs.com/header1.png",
-                "SendTime": 1584433114301,
-                "Body": "再试一下",
-                "ContentType": "text/text"
-            }
-        ]
-    },
     "Success": true
 }
 ```

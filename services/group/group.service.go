@@ -38,7 +38,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 		}
 
 		mems := strings.Split(createGroup.GroupMembers, ",")
-		if len(mems) <= 2 {
+		if len(mems) < 2 {
 			return nil,syserr.NewParameterError("群成员必须大于2个人")
 		}
 

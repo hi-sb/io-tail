@@ -241,11 +241,11 @@ func (g *GroupMemberModel) CheckGroupRole(groupID string, userID string, isGroup
 		return false
 	}
 	if isGroupMain {
-		if groupMemberModel.GroupMemberRole != 0 {
+		if groupMemberModel.GroupMemberRole == 1 {
 			return true
 		}
 	} else {
-		if groupMemberModel.GroupMemberRole == 1 {
+		if groupMemberModel.GroupMemberRole != 0 {
 			return true
 		}
 	}
