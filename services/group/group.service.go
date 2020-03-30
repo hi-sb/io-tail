@@ -76,7 +76,7 @@ func (*GroupService) createGroup(request *restful.Request, response *restful.Res
 					Body:        string(addGroupStringByte),
 					ContentType: body.MessageTypeAddToGroup,
 				}
-				//发送踢人消息
+				//发送加入消息
 				go message.SendMessage("-1", groupMember.GroupMemberID, &addGroupSendRequest)
 			}
 
