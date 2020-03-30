@@ -272,7 +272,7 @@ func (*FriendAddReqModel) GetFriendIDsByCurrentId(currentId string) ([]string,er
 			}
 
 			if f.FriendID == currentId {
-				if f.IsAgree != constants.AGREE_ADD {
+				if f.IsAgree == constants.AGREE_ADD {
 					friendIDs = append(friendIDs, f.UserID)
 					cache.RedisClient.SAdd(userIdKEY,f.UserID)
 				}
