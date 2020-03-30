@@ -149,6 +149,9 @@ func (*FriendService) updateFriendIsAgree(request *restful.Request, response *re
 				return err
 			}
 		}
+
+
+
 		friendModelStringByte, _ := json.Marshal(friendModel)
 		addFriendSendRequest := model.SendRequest{
 			SendTime:    time.Now().Unix(),
