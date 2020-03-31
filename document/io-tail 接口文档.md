@@ -1163,7 +1163,7 @@ abstract class MessageListener extends Thread {
 	MessageTypeNotify string = "notify/text"
 	//添加好友消息，格式为一个json
 	// Add friends
-	MessageTypeAddFriends string = "add-friends/json"
+	MessageTypeAddFriends string = "add-friend/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 	//被邀请 入群通知消息
@@ -1244,7 +1244,7 @@ abstract class MessageListener extends Thread {
 	MessageTypeNotify string = "notify/text"
 	//添加好友消息，格式为一个json
 	// Add friends
-	MessageTypeAddFriends string = "add-friends/json"
+	MessageTypeAddFriends string = "add-friend/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 	//被邀请 入群通知消息
@@ -1320,7 +1320,7 @@ abstract class MessageListener extends Thread {
 	MessageTypeNotify string = "notify/text"
 	//添加好友消息，格式为一个json
 	// Add friends
-	MessageTypeAddFriends string = "add-friends/json"
+	MessageTypeAddFriends string = "add-friend/json"
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
 	//被邀请 入群通知消息
@@ -1383,7 +1383,7 @@ abstract class MessageListener extends Thread {
 	MessageTypeNotify string = "notify/text"
 	//添加好友消息，格式为一个json
 	// Add friends
-	MessageTypeAddFriends string = "add-friends/json"
+	MessageTypeAddFriends string = "add-friend/json"
 	//heartbeat 心跳消息
     //心跳消息可以忽略
 	MessageTypeHeartbeat string = "heartbeat/time-stamp"
